@@ -40,6 +40,15 @@
     font-size: 1.6rem;
     margin-bottom: 20px;
   }
+  .page-link {
+    display: block;
+    color: var(--primary);
+    text-align: center;
+    margin: -12px 0 20px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .page-link:hover { color: #60a5fa; }
   .card {
     background: var(--card-bg);
     border-radius: 16px;
@@ -316,6 +325,7 @@
 <body>
 <div class="app">
   <h1>📡 Morse Code Trainer</h1>
+  <a class="page-link" href="translator.html">Open text translator</a>
 
   <div class="card">
     <button class="section-title-btn" id="challengeSettingsToggle">
@@ -573,6 +583,38 @@ const charGapInput = document.getElementById('charGapInput');
 const wordGapInput = document.getElementById('wordGapInput');
 const resetSettingsBtn = document.getElementById('resetSettingsBtn');
 
+const SOUND_SETTINGS_KEY = 'morse-trainer-sound-settings';
+const soundSettingInputs = [freqInput, dotInput, dashInput, symbolGapInput, charGapInput, wordGapInput];
+
+function loadSoundSettings() {
+  try {
+    const savedSettings = JSON.parse(localStorage.getItem(SOUND_SETTINGS_KEY));
+    if (!savedSettings) return;
+    soundSettingInputs.forEach(input => {
+      if (savedSettings[input.id] !== undefined) input.value = savedSettings[input.id];
+    });
+    if (typeof savedSettings.autoPlay === 'boolean') autoPlayToggle.checked = savedSettings.autoPlay;
+  } catch (error) {
+    console.warn('Could not load sound settings:', error);
+  }
+}
+
+function saveSoundSettings() {
+  const savedSettings = { autoPlay: autoPlayToggle.checked };
+  soundSettingInputs.forEach(input => {
+    savedSettings[input.id] = input.value;
+  });
+  try {
+    localStorage.setItem(SOUND_SETTINGS_KEY, JSON.stringify(savedSettings));
+  } catch (error) {
+    console.warn('Could not save sound settings:', error);
+  }
+}
+
+loadSoundSettings();
+soundSettingInputs.forEach(input => input.addEventListener('input', saveSoundSettings));
+autoPlayToggle.addEventListener('change', saveSoundSettings);
+
 function applyPresetToTextarea() {
   const mode = document.querySelector('input[name="charset"]:checked').value;
   charPoolInput.value = PRESETS[mode].join(' ');
@@ -690,6 +732,7 @@ resetSettingsBtn.addEventListener('click', () => {
   symbolGapInput.value = DEFAULT_SETTINGS.symbolGap;
   charGapInput.value = DEFAULT_SETTINGS.charGap;
   wordGapInput.value = DEFAULT_SETTINGS.wordGap;
+  saveSoundSettings();
 });
 
 function getSoundSettings() {

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse Text Translator</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root { --primary: #2563eb; --primary-dark: #1d4ed8; --bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --warning: #fbbf24; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 16px; min-height: 100vh; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .app { width: 100%; max-width: 680px; margin: 0 auto; }
+  h1 { margin: 0 0 8px; text-align: center; font-size: 1.6rem; }
+  .back-link { display: block; color: var(--primary); text-align: center; margin: 0 0 20px; font-weight: 600; text-decoration: none; }
+  .back-link:hover { color: #60a5fa; }
+  .card { margin-bottom: 16px; padding: 20px; background: var(--card-bg); border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  label { display: block; margin-bottom: 8px; color: var(--muted); font-size: 0.9rem; font-weight: 600; }
+  textarea, .morse-output, input[type="number"] { border: 1px solid #334155; background: var(--bg); color: var(--text); border-radius: 8px; }
+  textarea { width: 100%; min-height: 130px; padding: 12px; font: 1rem/1.5 'Courier New', monospace; resize: vertical; }
+  .morse-output { min-height: 96px; padding: 14px; overflow-wrap: anywhere; white-space: pre-wrap; font: 1.15rem/1.7 'Courier New', monospace; letter-spacing: 2px; }
+  .warning { min-height: 1.25em; margin-top: 8px; color: var(--warning); font-size: 0.82rem; }
+  button { width: 100%; border: 0; border-radius: 8px; padding: 13px 16px; color: white; background: var(--primary); cursor: pointer; font-size: 1rem; font-weight: 600; }
+  button:hover { background: var(--primary-dark); }
+  .section-title { margin: 0 0 16px; font-size: 1.05rem; }
+  .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; }
+  .settings-grid input { width: 100%; padding: 10px; font-size: 1rem; }
+  .toggle { display: flex; align-items: center; gap: 8px; margin: 14px 0 0; color: var(--text); font-size: 0.92rem; }
+  .toggle input { width: 18px; height: 18px; accent-color: var(--primary); }
+  .reset { margin-top: 12px; background: #334155; }
+  .reset:hover { background: #475569; }
+  @media (max-width: 420px) { .settings-grid { grid-template-columns: 1fr; } .morse-output { font-size: 1rem; letter-spacing: 1px; } }
+</style>
+</head>
+<body>
+<main class="app">
+  <h1>Morse Text Translator</h1>
+  <a class="back-link" href="index.html">Back to trainer</a>
+
+  <section class="card">
+    <label for="textInput">Text to translate</label>
+    <textarea id="textInput" placeholder="Write your message here..." autofocus></textarea>
+    <div class="warning" id="unsupportedCharacters" aria-live="polite"></div>
+    <button id="translateBtn" type="button">Translate to Morse</button>
+  </section>
+
+  <section class="card">
+    <label for="morseOutput">Morse code</label>
+    <div class="morse-output" id="morseOutput" aria-live="polite">Your translation will appear here.</div>
+    <button id="playBtn" type="button" disabled>Play sound</button>
+  </section>
+
+  <section class="card">
+    <h2 class="section-title">Sound settings</h2>
+    <div class="settings-grid">
+      <div><label for="freqInput">Frequency (Hz)</label><input type="number" id="freqInput" min="100" max="2000" step="10" value="650"></div>
+      <div><label for="dotInput">Dot duration (ms)</label><input type="number" id="dotInput" min="20" max="1000" step="10" value="90"></div>
+      <div><label for="dashInput">Dash duration (ms)</label><input type="number" id="dashInput" min="20" max="3000" step="10" value="270"></div>
+      <div><label for="symbolGapInput">Gap between symbols (ms)</label><input type="number" id="symbolGapInput" min="0" max="1000" step="10" value="90"></div>
+      <div><label for="charGapInput">Gap between characters (ms)</label><input type="number" id="charGapInput" min="0" max="3000" step="10" value="270"></div>
+      <div><label for="wordGapInput">Gap between words (ms)</label><input type="number" id="wordGapInput" min="0" max="5000" step="10" value="630"></div>
+    </div>
+    <label class="toggle"><input type="checkbox" id="autoPlayToggle" checked> Play sound after translating</label>
+    <button class="reset" id="resetSettingsBtn" type="button">Reset to standard timing</button>
+  </section>
+</main>
+
+<script>
+const MORSE = {
+  'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..',
+  '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.', '.': '.-.-.-', ',': '--..--', '?': '..--..', "'": '.----.', '!': '-.-.--', '/': '-..-.', '(': '-.--.', ')': '-.--.-', '&': '.-...', ':': '---...', ';': '-.-.-.', '=': '-...-', '+': '.-.-.', '-': '-....-', '_': '..--.-', '"': '.-..-.', '$': '...-..-', '@': '.--.-.'
+};
+const DEFAULT_SETTINGS = { freq: 650, dot: 90, dash: 270, symbolGap: 90, charGap: 270, wordGap: 630 };
+const SOUND_SETTINGS_KEY = 'morse-trainer-sound-settings';
+const textInput = document.getElementById('textInput');
+const morseOutput = document.getElementById('morseOutput');
+const unsupportedCharacters = document.getElementById('unsupportedCharacters');
+const playBtn = document.getElementById('playBtn');
+const autoPlayToggle = document.getElementById('autoPlayToggle');
+const freqInput = document.getElementById('freqInput');
+const dotInput = document.getElementById('dotInput');
+const dashInput = document.getElementById('dashInput');
+const symbolGapInput = document.getElementById('symbolGapInput');
+const charGapInput = document.getElementById('charGapInput');
+const wordGapInput = document.getElementById('wordGapInput');
+const soundSettingInputs = [freqInput, dotInput, dashInput, symbolGapInput, charGapInput, wordGapInput];
+let translatedText = '';
+let audioCtx = null;
+
+function loadSoundSettings() {
+  try {
+    const savedSettings = JSON.parse(localStorage.getItem(SOUND_SETTINGS_KEY));
+    if (!savedSettings) return;
+    soundSettingInputs.forEach(input => { if (savedSettings[input.id] !== undefined) input.value = savedSettings[input.id]; });
+    if (typeof savedSettings.autoPlay === 'boolean') autoPlayToggle.checked = savedSettings.autoPlay;
+  } catch (error) { console.warn('Could not load sound settings:', error); }
+}
+function saveSoundSettings() {
+  const savedSettings = { autoPlay: autoPlayToggle.checked };
+  soundSettingInputs.forEach(input => { savedSettings[input.id] = input.value; });
+  try { localStorage.setItem(SOUND_SETTINGS_KEY, JSON.stringify(savedSettings)); } catch (error) { console.warn('Could not save sound settings:', error); }
+}
+function getSoundSettings() {
+  const clamp = (value, min, max) => Math.min(Math.max(Number.parseFloat(value) || min, min), max);
+  return { freq: clamp(freqInput.value, 100, 2000), dot: clamp(dotInput.value, 20, 1000) / 1000, dash: clamp(dashInput.value, 20, 3000) / 1000, symbolGap: clamp(symbolGapInput.value, 0, 1000) / 1000, charGap: clamp(charGapInput.value, 0, 3000) / 1000, wordGap: clamp(wordGapInput.value, 0, 5000) / 1000 };
+}
+function translateText() {
+  const input = textInput.value.toUpperCase();
+  const unsupported = [...new Set([...input].filter(character => !MORSE[character] && !/\s/.test(character)))];
+  const words = input.replace(/\s+/g, ' ').trim().split(' ')
+    .map(word => [...word].filter(character => MORSE[character]).join(''))
+    .filter(Boolean);
+  translatedText = words.join(' ');
+  morseOutput.textContent = words.length ? words.map(word => [...word].map(character => MORSE[character]).join('   ')).join(' / ') : 'Your translation will appear here.';
+  unsupportedCharacters.textContent = unsupported.length ? `Unsupported characters ignored: ${unsupported.join(' ')}` : '';
+  playBtn.disabled = !words.length;
+  if (words.length && autoPlayToggle.checked) playMorse(translatedText);
+}
+function playTone(startTime, duration, frequency) {
+  const oscillator = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const rampTime = Math.min(0.005, duration / 4);
+  oscillator.frequency.value = frequency;
+  oscillator.type = 'sine';
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(0.3, startTime + rampTime);
+  gain.gain.setValueAtTime(0.3, startTime + duration - rampTime);
+  gain.gain.linearRampToValueAtTime(0, startTime + duration);
+  oscillator.connect(gain); gain.connect(audioCtx.destination); oscillator.start(startTime); oscillator.stop(startTime + duration);
+}
+function playMorse(text) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const settings = getSoundSettings();
+  let time = audioCtx.currentTime + 0.1;
+  text.split(' ').forEach((word, wordIndex, words) => {
+    const characters = [...word].filter(character => MORSE[character]);
+    characters.forEach((character, characterIndex) => {
+      [...MORSE[character]].forEach((symbol, symbolIndex, symbols) => {
+        const duration = symbol === '.' ? settings.dot : settings.dash;
+        playTone(time, duration, settings.freq); time += duration;
+        if (symbolIndex < symbols.length - 1) time += settings.symbolGap;
+      });
+      if (characterIndex < characters.length - 1) time += settings.charGap;
+    });
+    if (wordIndex < words.length - 1) time += settings.wordGap;
+  });
+}
+
+document.getElementById('translateBtn').addEventListener('click', translateText);
+playBtn.addEventListener('click', () => playMorse(translatedText));
+document.getElementById('resetSettingsBtn').addEventListener('click', () => { soundSettingInputs.forEach(input => { input.value = DEFAULT_SETTINGS[input.id.replace('Input', '')]; }); saveSoundSettings(); });
+soundSettingInputs.forEach(input => input.addEventListener('input', saveSoundSettings));
+autoPlayToggle.addEventListener('change', saveSoundSettings);
+loadSoundSettings();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(error => console.warn('Service worker registration failed:', error));
+</script>
+</body>
+</html>
