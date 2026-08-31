@@ -33,12 +33,6 @@
   h1 {
     text-align: center;
     font-size: 1.6rem;
-    margin-bottom: 4px;
-  }
-  .subtitle {
-    text-align: center;
-    color: var(--muted);
-    font-size: 0.9rem;
     margin-bottom: 20px;
   }
   .card {
@@ -115,21 +109,28 @@
     accent-color: var(--primary);
     cursor: pointer;
   }
-  .collapsible {
+  .section-title-btn {
     background: transparent;
     border: none;
-    color: var(--primary);
-    font-weight: 600;
-    font-size: 0.92rem;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1.05rem;
     cursor: pointer;
     padding: 0;
-    margin-bottom: 12px;
+    margin-bottom: 4px;
     display: flex;
     align-items: center;
-    gap: 6px;
-    width: auto;
+    justify-content: space-between;
+    width: 100%;
   }
-  .collapsible:hover { text-decoration: underline; background: transparent; }
+  .section-title-btn:hover { background: transparent; opacity: 0.85; }
+  .section-arrow {
+    color: var(--primary);
+    font-size: 0.9rem;
+  }
+  .section-body {
+    margin-top: 16px;
+  }
   .settings-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -141,9 +142,6 @@
   }
   .settings-field input[type="number"] {
     width: 100%;
-  }
-  .settings-panel {
-    margin-bottom: 14px;
   }
   .reset-btn {
     margin-top: 12px;
@@ -271,60 +269,70 @@
 <body>
 <div class="app">
   <h1>📡 Morse Code Trainer</h1>
-  <p class="subtitle">Listen, read, and test your Morse code skills</p>
 
   <div class="card">
-    <div class="row">
-      <div class="word-settings-field">
-        <label for="numChars">Chars per word (1–10)</label>
-        <input type="number" id="numChars" min="1" max="10" value="2">
-      </div>
-      <div class="word-settings-field">
-        <label for="numWords">Number of words (1–10)</label>
-        <input type="number" id="numWords" min="1" max="10" value="1">
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="word-settings-field" style="flex:1;">
-        <label>Succession mode</label>
-        <div class="charset-options">
-          <label><input type="radio" name="successionMode" value="random" checked> Random</label>
-          <label><input type="radio" name="successionMode" value="ngram"> Language n-grams</label>
-        </div>
-      </div>
-    </div>
-
-    <div class="row" id="languageRow" style="display:none;">
-      <div class="word-settings-field" style="flex:1;">
-        <label>Language</label>
-        <div class="charset-options">
-          <label><input type="radio" name="ngramLanguage" value="english" checked> English</label>
-          <label><input type="radio" name="ngramLanguage" value="french"> French</label>
-          <label><input type="radio" name="ngramLanguage" value="german"> German</label>
-        </div>
-      </div>
-    </div>
-    <div class="hint hidden" id="ngramHint">Real letter sequences (n-grams) sampled from common vocabulary. Accented letters are simplified to A-Z so they map to Morse code.</div>
-
-    <div id="charsetSection">
+    <button class="section-title-btn" id="challengeSettingsToggle">
+      <span>🎯 Challenge settings</span>
+      <span class="section-arrow" id="challengeSettingsArrow">▴</span>
+    </button>
+    <div class="section-body" id="challengeSettingsBody">
       <div class="row">
-        <div class="charset-options">
-          <label><input type="radio" name="charset" value="letters" checked> Letters</label>
-          <label><input type="radio" name="charset" value="digits"> Digits</label>
-          <label><input type="radio" name="charset" value="special"> Special chars</label>
-          <label><input type="radio" name="charset" value="all"> All</label>
+        <div class="word-settings-field">
+          <label for="numChars">Chars per word (1–10)</label>
+          <input type="number" id="numChars" min="1" max="10" value="2">
+        </div>
+        <div class="word-settings-field">
+          <label for="numWords">Number of words (1–10)</label>
+          <input type="number" id="numWords" min="1" max="10" value="1">
         </div>
       </div>
 
-      <label for="charPoolInput">Characters used (edit to customize)</label>
-      <textarea id="charPoolInput" class="charpool-textarea" spellcheck="false"></textarea>
-      <div class="charpool-note">Add or remove any characters you want. Duplicates are ignored automatically.</div>
-      <div class="charpool-warning" id="charPoolWarning"></div>
-    </div>
+      <div class="row">
+        <div class="word-settings-field" style="flex:1;">
+          <label>Succession mode</label>
+          <div class="charset-options">
+            <label><input type="radio" name="successionMode" value="random" checked> Random</label>
+            <label><input type="radio" name="successionMode" value="ngram"> Language n-grams</label>
+          </div>
+        </div>
+      </div>
 
-    <button class="collapsible" id="soundSettingsToggle">⚙️ Sound settings ▾</button>
-    <div class="settings-panel hidden" id="soundSettingsPanel">
+      <div class="row" id="languageRow" style="display:none;">
+        <div class="word-settings-field" style="flex:1;">
+          <label>Language</label>
+          <div class="charset-options">
+            <label><input type="radio" name="ngramLanguage" value="english" checked> English</label>
+            <label><input type="radio" name="ngramLanguage" value="french"> French</label>
+            <label><input type="radio" name="ngramLanguage" value="german"> German</label>
+          </div>
+        </div>
+      </div>
+      <div class="hint hidden" id="ngramHint">Real letter sequences (n-grams) sampled from common vocabulary. Accented letters are simplified to A-Z so they map to Morse code.</div>
+
+      <div id="charsetSection">
+        <div class="row">
+          <div class="charset-options">
+            <label><input type="radio" name="charset" value="letters" checked> Letters</label>
+            <label><input type="radio" name="charset" value="digits"> Digits</label>
+            <label><input type="radio" name="charset" value="special"> Special chars</label>
+            <label><input type="radio" name="charset" value="all"> All</label>
+          </div>
+        </div>
+
+        <label for="charPoolInput">Characters used (edit to customize)</label>
+        <textarea id="charPoolInput" class="charpool-textarea" spellcheck="false"></textarea>
+        <div class="charpool-note">Add or remove any characters you want. Duplicates are ignored automatically.</div>
+        <div class="charpool-warning" id="charPoolWarning"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="section-title-btn" id="soundSettingsToggle">
+      <span>⚙️ Sound settings</span>
+      <span class="section-arrow" id="soundSettingsArrow">▾</span>
+    </button>
+    <div class="section-body hidden" id="soundSettingsBody">
       <div class="toggle-row">
         <label><input type="checkbox" id="autoPlayToggle" checked> Auto-play sound on new challenge</label>
       </div>
@@ -356,7 +364,9 @@
       </div>
       <button class="reset-btn" id="resetSettingsBtn">Reset to standard timing</button>
     </div>
+  </div>
 
+  <div class="card">
     <button class="btn-primary" id="newChallengeBtn">🎲 New Challenge</button>
   </div>
 
@@ -482,8 +492,13 @@ const charsetSection = document.getElementById('charsetSection');
 const languageRow = document.getElementById('languageRow');
 const ngramHint = document.getElementById('ngramHint');
 
+const challengeSettingsToggle = document.getElementById('challengeSettingsToggle');
+const challengeSettingsBody = document.getElementById('challengeSettingsBody');
+const challengeSettingsArrow = document.getElementById('challengeSettingsArrow');
+
 const soundSettingsToggle = document.getElementById('soundSettingsToggle');
-const soundSettingsPanel = document.getElementById('soundSettingsPanel');
+const soundSettingsBody = document.getElementById('soundSettingsBody');
+const soundSettingsArrow = document.getElementById('soundSettingsArrow');
 const freqInput = document.getElementById('freqInput');
 const dotInput = document.getElementById('dotInput');
 const dashInput = document.getElementById('dashInput');
@@ -571,10 +586,16 @@ function getNGramWord(language, n) {
   return base.substr(start, n);
 }
 
+challengeSettingsToggle.addEventListener('click', () => {
+  const isHidden = challengeSettingsBody.classList.contains('hidden');
+  challengeSettingsBody.classList.toggle('hidden');
+  challengeSettingsArrow.textContent = isHidden ? '▴' : '▾';
+});
+
 soundSettingsToggle.addEventListener('click', () => {
-  const isHidden = soundSettingsPanel.classList.contains('hidden');
-  soundSettingsPanel.classList.toggle('hidden');
-  soundSettingsToggle.textContent = isHidden ? '⚙️ Sound settings ▴' : '⚙️ Sound settings ▾';
+  const isHidden = soundSettingsBody.classList.contains('hidden');
+  soundSettingsBody.classList.toggle('hidden');
+  soundSettingsArrow.textContent = isHidden ? '▴' : '▾';
 });
 
 resetSettingsBtn.addEventListener('click', () => {
