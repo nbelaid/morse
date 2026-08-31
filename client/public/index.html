@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Morse Code Trainer</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --success: #16a34a;
+    --error: #dc2626;
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f1f5f9;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+  }
+  .app {
+    width: 100%;
+    max-width: 480px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+  }
+  .card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+  input[type="number"] {
+    width: 70px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: var(--text);
+    font-size: 1rem;
+  }
+  .word-settings-field {
+    display: flex;
+    flex-direction: column;
+  }
+  .word-settings-field label {
+    font-size: 0.78rem;
+    margin-bottom: 6px;
+    white-space: nowrap;
+  }
+  .charset-options {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .charset-options label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0;
+    font-size: 0.92rem;
+  }
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .toggle-row label {
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 0;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toggle-row input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+  }
+  .collapsible {
+    background: transparent;
+    border: none;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 0.92rem;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: auto;
+  }
+  .collapsible:hover { text-decoration: underline; background: transparent; }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+  }
+  .settings-field label {
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+  }
+  .settings-field input[type="number"] {
+    width: 100%;
+  }
+  .settings-panel {
+    margin-bottom: 14px;
+  }
+  .reset-btn {
+    margin-top: 12px;
+    background: #334155;
+    color: var(--text);
+    font-size: 0.85rem;
+    padding: 10px;
+  }
+  .reset-btn:hover { background: #475569; }
+  .charpool-textarea {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: var(--text);
+    font-size: 0.95rem;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    resize: vertical;
+    margin-bottom: 6px;
+  }
+  .charpool-note {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .charpool-warning {
+    font-size: 0.78rem;
+    color: #fbbf24;
+    margin-bottom: 12px;
+    min-height: 1em;
+  }
+  button {
+    border: none;
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.2s;
+    width: 100%;
+  }
+  button:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-secondary { background: #334155; color: var(--text); }
+  .btn-secondary:hover { background: #475569; }
+  .btn-success { background: var(--success); color: white; }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .morse-display {
+    font-size: 1.6rem;
+    letter-spacing: 3px;
+    text-align: center;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 14px;
+    word-break: break-word;
+    font-family: 'Courier New', monospace;
+  }
+  .answer-input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: var(--text);
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    text-align: center;
+    letter-spacing: 3px;
+    margin-bottom: 14px;
+  }
+  .result {
+    text-align: center;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    margin-bottom: 10px;
+    font-family: 'Courier New', monospace;
+  }
+  .result-status {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .correct { color: var(--success); }
+  .incorrect { color: var(--error); }
+  .char-box {
+    display: inline-block;
+    padding: 4px 8px;
+    margin: 2px 1px;
+    border-radius: 6px;
+  }
+  .word-group {
+    display: inline-block;
+    margin: 0 8px;
+  }
+  .char-correct { background: rgba(22,163,74,0.2); color: var(--success); }
+  .char-incorrect { background: rgba(220,38,38,0.2); color: var(--error); }
+  .hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-top: -6px;
+    margin-bottom: 12px;
+  }
+  .hidden { display: none; }
+  @media (max-width: 380px) {
+    .morse-display { font-size: 1.3rem; letter-spacing: 2px; }
+    .settings-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>📡 Morse Code Trainer</h1>
+  <p class="subtitle">Listen, read, and test your Morse code skills</p>
+
+  <div class="card">
+    <div class="row">
+      <div class="word-settings-field">
+        <label for="numChars">Chars per word (1–10)</label>
+        <input type="number" id="numChars" min="1" max="10" value="2">
+      </div>
+      <div class="word-settings-field">
+        <label for="numWords">Number of words (1–10)</label>
+        <input type="number" id="numWords" min="1" max="10" value="1">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="word-settings-field" style="flex:1;">
+        <label>Succession mode</label>
+        <div class="charset-options">
+          <label><input type="radio" name="successionMode" value="random" checked> Random</label>
+          <label><input type="radio" name="successionMode" value="ngram"> Language n-grams</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="row" id="languageRow" style="display:none;">
+      <div class="word-settings-field" style="flex:1;">
+        <label>Language</label>
+        <div class="charset-options">
+          <label><input type="radio" name="ngramLanguage" value="english" checked> English</label>
+          <label><input type="radio" name="ngramLanguage" value="french"> French</label>
+          <label><input type="radio" name="ngramLanguage" value="german"> German</label>
+        </div>
+      </div>
+    </div>
+    <div class="hint hidden" id="ngramHint">Real letter sequences (n-grams) sampled from common vocabulary. Accented letters are simplified to A-Z so they map to Morse code.</div>
+
+    <div id="charsetSection">
+      <div class="row">
+        <div class="charset-options">
+          <label><input type="radio" name="charset" value="letters" checked> Letters</label>
+          <label><input type="radio" name="charset" value="digits"> Digits</label>
+          <label><input type="radio" name="charset" value="special"> Special chars</label>
+          <label><input type="radio" name="charset" value="all"> All</label>
+        </div>
+      </div>
+
+      <label for="charPoolInput">Characters used (edit to customize)</label>
+      <textarea id="charPoolInput" class="charpool-textarea" spellcheck="false"></textarea>
+      <div class="charpool-note">Add or remove any characters you want. Duplicates are ignored automatically.</div>
+      <div class="charpool-warning" id="charPoolWarning"></div>
+    </div>
+
+    <button class="collapsible" id="soundSettingsToggle">⚙️ Sound settings ▾</button>
+    <div class="settings-panel hidden" id="soundSettingsPanel">
+      <div class="toggle-row">
+        <label><input type="checkbox" id="autoPlayToggle" checked> Auto-play sound on new challenge</label>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-field">
+          <label for="freqInput">Frequency (Hz)</label>
+          <input type="number" id="freqInput" min="100" max="2000" step="10" value="650">
+        </div>
+        <div class="settings-field">
+          <label for="dotInput">Dot duration (ms)</label>
+          <input type="number" id="dotInput" min="20" max="1000" step="10" value="90">
+        </div>
+        <div class="settings-field">
+          <label for="dashInput">Dash duration (ms)</label>
+          <input type="number" id="dashInput" min="20" max="3000" step="10" value="270">
+        </div>
+        <div class="settings-field">
+          <label for="symbolGapInput">Gap between symbols (ms)</label>
+          <input type="number" id="symbolGapInput" min="0" max="1000" step="10" value="90">
+        </div>
+        <div class="settings-field">
+          <label for="charGapInput">Gap between characters (ms)</label>
+          <input type="number" id="charGapInput" min="0" max="3000" step="10" value="270">
+        </div>
+        <div class="settings-field">
+          <label for="wordGapInput">Gap between words (ms)</label>
+          <input type="number" id="wordGapInput" min="0" max="5000" step="10" value="630">
+        </div>
+      </div>
+      <button class="reset-btn" id="resetSettingsBtn">Reset to standard timing</button>
+    </div>
+
+    <button class="btn-primary" id="newChallengeBtn">🎲 New Challenge</button>
+  </div>
+
+  <div class="card" id="challengeCard" style="display:none;">
+    <label>Morse Code</label>
+    <div class="morse-display" id="morseDisplay">— · — ·</div>
+    <div class="btn-row">
+      <button class="btn-secondary" id="playBtn">🔊 Play Sound</button>
+    </div>
+
+    <label for="answerInput">Your answer</label>
+    <input type="text" id="answerInput" class="answer-input" maxlength="40" placeholder="Type your answer">
+
+    <div class="btn-row">
+      <button class="btn-success" id="checkBtn">✅ Show Result</button>
+    </div>
+
+    <div id="resultArea" class="hidden">
+      <div class="result-status" id="resultStatus"></div>
+      <div class="result" id="resultCompare"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MORSE = {
+  'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+  'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+  'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+  'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+  'Y': '-.--', 'Z': '--..',
+  '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-',
+  '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.',
+  '.': '.-.-.-', ',': '--..--', '?': '..--..', "'": '.----.',
+  '!': '-.-.--', '/': '-..-.', '(': '-.--.', ')': '-.--.-',
+  '&': '.-...', ':': '---...', ';': '-.-.-.', '=': '-...-',
+  '+': '.-.-.', '-': '-....-', '_': '..--.-', '"': '.-..-.',
+  '$': '...-..-', '@': '.--.-.'
+};
+
+const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const DIGITS = '0123456789'.split('');
+const SPECIAL = ['.', ',', '?', "'", '!', '/', '(', ')', '&', ':', ';', '=', '+', '-', '_', '"', '$', '@'];
+
+const PRESETS = {
+  letters: LETTERS,
+  digits: DIGITS,
+  special: SPECIAL,
+  all: LETTERS.concat(DIGITS, SPECIAL)
+};
+
+const NGRAM_WORDLISTS = {
+  english: [
+    "A","I","AT","TO","IT","OF","IN","ON","AS","BE","BY","OR","GO","DO","WE","HE","SO","UP","NO","AN","AM","IF","US","MY","ME","OK","ID","OH","HI","YO","PA","MA","OX","EX",
+    "THE","AND","FOR","ARE","BUT","NOT","YOU","ALL","CAN","HER","WAS","ONE","OUR","OUT","DAY","GET","HAS","HIM","HIS","HOW","MAN","NEW","NOW","OLD","SEE","TWO","WAY","WHO","BOY","DID","ITS","LET","PUT","SAY","SHE","TOO","USE","ARM","BAG","BED","BOX","CAR","CAT","COW","CUP","CUT","DOG","EAR","EAT","EGG","END","EYE","FAR","FEW","FLY","FUN","GUN","GUY","HOT","ICE","JOB","JOY","KEY","KID","LAW","LEG","LIE","LOT","LOW","MAP","MIX","MOM","NET","OIL","OWN","PAY","PEN","PET","PIE","PIG","POT","RUN","SAD","SAT","SET","SIT","SIX","SKY","SUN","TAX","TEA","TEN","TIP","TOP","TOY","WAR","WIN","YES","ZOO",
+    "THAT","WITH","THIS","WILL","YOUR","FROM","THEY","KNOW","WANT","BEEN","GOOD","MUCH","SOME","TIME","VERY","WHEN","COME","HERE","JUST","LIKE","LONG","MAKE","MANY","OVER","SUCH","TAKE","THAN","THEM","WELL","WERE","WHAT","WORD","WORK","YEAR","BACK","CALL","CAME","EACH","FIND","GIVE","HAND","HIGH","KEEP","KIND","LAST","LEFT","LIFE","LIVE","LOOK","MADE","MOST","MOVE","MUST","NAME","NEED","NEXT","OPEN","PART","PLAY","SAID","SAME","SEEM","SHOW","SIDE","TELL","TURN","USED","WEEK","ABLE","BODY","BOOK","BOTH","CITY","COLD","DARK","DEAL","DOOR","DOWN","EASY","FACE","FACT","FALL","FEEL","FILM","FIRE","FISH","FIVE","FOOD","FOOT","FORM","FOUR","FREE","FULL","GAME","GIRL","GROW","HALF","HARD","HEAD","HEAR","HEAT","HELP","HOLD","HOME","HOPE","HOUR","IDEA","KILL","LAND","LATE","LEAD","LESS","LINE","LIST","LOVE","MEAN","MEET","MIND","MISS","NEAR","NICE","NINE","NONE","NOTE","PAIN","PLAN","READ","REAL","REST","RICH","RISE","ROAD","ROCK","ROLE","ROOM","RULE","SAFE","SEAT","SEND","SHIP","SHOP","SHUT","SING","SIZE","SLOW","SORT","SPOT","STAR","STOP","SURE","TALK","TEAM","TEST","TEXT","TREE","TRIP","TRUE","UNIT","VOTE","WAIT","WALK","WALL","WARM","WASH","WIDE","WIFE","WILD","WIND","WISH","WOOD",
+    "ABOUT","AFTER","AGAIN","BEING","COULD","EVERY","FIRST","FOUND","GREAT","GROUP","HOUSE","LARGE","LEARN","NEVER","OTHER","PLACE","RIGHT","SMALL","SOUND","STILL","THEIR","THERE","THESE","THING","THINK","THREE","UNDER","WATER","WHERE","WHICH","WHILE","WORLD","WOULD","WRITE","YOUNG","ABOVE","ADULT","ALONE","ALONG","ALIVE","AMONG","ANGER","APPLE","APPLY","BASIC","BEACH","BEGIN","BLACK","BLIND","BLOCK","BLOOD","BOARD","BRAIN","BREAD","BREAK","BRING","BROAD","BROWN","BUILD","CARRY","CATCH","CAUSE","CHAIR","CHART","CHASE","CHILD","CLAIM","CLASS","CLEAN","CLEAR","CLOCK","CLOSE","CLOUD","COAST","COUNT","COURT","COVER","CRAZY","CREAM","CRIME","CROSS","CROWD","CROWN","DAILY","DANCE","DEATH","DOUBT","DRAFT","DRAMA","DREAM","DRESS","DRINK","DRIVE","EARLY","EARTH","EIGHT","EMPTY","ENEMY","ENJOY","ENTER","ENTRY","EQUAL","ERROR","EVENT","EXACT","EXIST","EXTRA","FAITH","FALSE","FIELD","FIGHT","FINAL","FLOOR","FOCUS","FORCE","FRAME","FRESH","FRONT","FRUIT","FUNNY","GLASS","GRAND","GRASS","GREEN","GUARD","GUESS","GUEST","GUIDE","HAPPY","HEART","HEAVY","HORSE","HOTEL","HUMAN","IMAGE","ISSUE","JUDGE","KNIFE","LAUGH","LEVEL","LIGHT","LIMIT","LOCAL","LOOSE","LUCKY","LUNCH","MAGIC","MAJOR","MATCH","METAL","MODEL","MONEY","MONTH","MOTOR","MOUSE","MOUTH","MOVIE","NERVE","NIGHT","NOISE","NORTH","NOVEL","NURSE","OCEAN","OFFER","ORDER","PAINT","PAPER","PARTY","PEACE","PHONE","PHOTO","PIANO","PIECE","PILOT","PLANE","PLANT","PLATE","POINT","POWER","PRESS","PRICE","PRIDE","PRIZE","PROUD","QUEEN","QUICK","QUIET","QUITE","RADIO","RAISE","RANGE","REACH","READY","RIVER","ROUND","ROUTE","ROYAL","SCALE","SCENE","SCORE","SENSE","SERVE","SEVEN","SHAPE","SHARE","SHARP","SHEET","SHELF","SHELL","SHIFT","SHINE","SHIRT","SHOCK","SHOOT","SHORT","SIGHT","SINCE","SKILL","SLEEP","SLIDE","SMART","SMILE","SMOKE","SOLID","SOLVE","SORRY","SPACE","SPARE","SPEAK","SPEED","SPEND","SPORT","STAGE","STAND","START","STATE","STEAM","STEEL","STICK","STOCK","STONE","STORE","STORM","STORY","STUDY","STYLE","SUGAR","SUPER","SWEET","TABLE","TEACH","THANK","THEME","THICK","THROW","TIGHT","TITLE","TODAY","TOTAL","TOUCH","TOUGH","TOWER","TRACK","TRADE","TRAIN","TREAT","TREND","TRIAL","TRICK","TRUCK","TRUST","TRUTH","TWICE","UNION","UNTIL","UPPER","URBAN","USUAL","VALUE","VIDEO","VISIT","VOICE","WATCH","WHEEL","WHITE","WHOLE","WOMAN","WORRY","WORSE","WORTH","WRONG","YOUTH",
+    "ALWAYS","AROUND","BECAME","BECOME","BEFORE","BETTER","CHANGE","DURING","ENOUGH","FAMILY","FOLLOW","FRIEND","LITTLE","LOOKED","MOMENT","NUMBER","PEOPLE","PERSON","PUBLIC","REALLY","SCHOOL","SECOND","SHOULD","SYSTEM","THOUGH","TOWARD","ANIMAL","ANSWER","BEHIND","BOTTOM","BROKEN","BUDGET","CAMERA","CANCER","CARBON","CASTLE","CHOICE","CHURCH","CIRCLE","COFFEE","COLUMN","COMBAT","COMMON","COOKIE","COTTON","COUPLE","COURSE","COUSIN","CREDIT","CUSTOM","DAMAGE","DANGER","DECIDE","DEGREE","DESERT","DESIGN","DESIRE","DETAIL","DEVICE","DIFFER","DINNER","DOCTOR","DOLLAR","DOMAIN","DRAGON","EFFECT","EFFORT","EITHER","ELEVEN","EMPIRE","ENGINE","EQUITY","ESCAPE","ETHNIC","EXPAND","EXPECT","EXPERT","EXPORT","FACTOR","FAILED","FAMOUS","FASTEN","FATHER","FELLOW","FEMALE","FIGURE","FILTER","FINGER","FLAVOR","FOREST","FORGET","FORMAL","FORMAT","FORMER","FOSSIL","FUTURE","GARDEN","GATHER","GENDER","GLOBAL","GOLDEN","GROUND","GROWTH","HANDLE","HAPPEN","HEALTH","HEIGHT","HIDDEN","IMPACT","INCOME","INDEED","INJURY","INSECT","INSIDE","INTENT","INVITE","ISLAND","ITSELF","JUNIOR","KICKED","KNIGHT","LAWYER","LEADER","LEAGUE","LEGACY","LESSON","LETTER","LIQUID","LISTEN","LITTLE","LIVING","LOOKUP","MANNER","MARBLE","MARGIN","MARINE","MASTER","MATTER","MEDIUM","MEMBER","MEMORY","METHOD","MIDDLE","MINUTE","MIRROR","MODERN","MODEST","MODULE","MOMENT","MOTHER","MOTION","MOVING","MUSCLE","MUSEUM","MUTUAL","NATION","NATIVE","NATURE","NEARBY","NORMAL","NOTICE","NUMBER","OBJECT","OBTAIN","OFFICE","OPTION","ORANGE","ORIGIN","OUTPUT","OXYGEN","PARENT","PARTLY","PASSED","PATENT","PATROL","PATTER","PEOPLE","PEPPER","PERIOD","PERMIT","PHRASE","PICNIC","PLANET","PLENTY","POCKET","POLICY","POLISH","PORTAL","POSTER","PRIEST","PRINCE","PRISON","PROFIT","PROPER","PROTON","PUBLIC","PUZZLE","RABBIT","RANDOM","RARELY","RATHER","REALLY","REASON","RECALL","RECENT","RECORD","REDUCE","REFORM","REGARD","REGION","RELATE","REMAIN","REMOTE","REMOVE","RENDER","REPAIR","REPEAT","REPORT","RESCUE","RESULT","RETAIL","RETURN","REVEAL","REWARD","RHYTHM","ROBUST","ROTATE","ROUGHT","ROYALS","SAMPLE","SATURN","SAVING","SEARCH","SEASON","SECOND","SECTOR","SECURE","SELDOM","SELECT","SENIOR","SEQUEL","SERIES","SERVER","SETTLE","SEVERE","SHADOW","SHAPED","SHOWER","SILVER","SIMPLE","SIMPLY","SISTER","SOCCER","SOCIAL","SODIUM","SOLELY","SPEECH","SPHERE","SPIRIT","SPOKEN","SPREAD","SPRING","SQUARE","STABLE","STATIC","STATUS","STEADY","STOLEN","STRAIN","STREAM","STREET","STRESS","STRICT","STRIKE","STRING","STRIVE","STRONG","STUDIO","SUBMIT","SUDDEN","SUFFER","SUMMER","SUMMIT","SUNSET","SUPPLY","SURELY","SURVEY","SWITCH","SYMBOL","SYSTEM","TACKLE","TALENT","TARGET","TEMPLE","TENANT","TENNIS","THEORY","THRIVE","TICKET","TIMBER","TISSUE","TOWARD","TRAVEL","TREATY","TRIBAL","TRUSTY","TUNNEL","TWELVE","TWENTY","UNIQUE","UNLESS","UNLOCK","UNTIL0","UPDATE","UPLOAD","URGENT","USEFUL","VALLEY","VENDOR","VERBAL","VESSEL","VICTIM","VIOLIN","VIRTUE","VISION","VISUAL","VOLUME","VOYAGE","WALLET","WEALTH","WEAPON","WEEKLY","WICKED","WIDGET","WINDOW","WINTER","WISDOM","WITHIN","WONDER","WORKER","WRITER","YELLOW",
+    "AGAINST","ANOTHER","BECAUSE","BETWEEN","COUNTRY","EXAMPLE","GENERAL","HIMSELF","HISTORY","INCLUDE","MORNING","NOTHING","PICTURE","PROBLEM","PROGRAM","QUICKLY","SEVERAL","SOMEONE","THOUGHT","THROUGH","TOGETHER","ABANDON","ABILITY","ABSENCE","ACADEMY","ACCOUNT","ACCUSED","ACHIEVE","ACQUIRE","ACTIVE","ADDRESS","ADVANCE","ADVISOR","AGREE","AIRLINE","AIRPORT","ALCOHOL","ALLIANCE","ALREADY","ANALYST","ANCIENT","ANNOUNCE","APPEAL","APPOINT","ARRANGE","ARTICLE","ATTEMPT","ATTRACT","AVERAGE","BALANCE","BANKING","BARRIER","BASEBALL","BATTERY","BENEFIT","BESIDES","BICYCLE","BIOLOGY","BLANKET","BOUNDARY","BREAKUP","BRIEFLY","BROTHER","BUILDER","BURNING","CABINET","CALIBER","CAMPING","CAPABLE","CAPITAL","CAPTURE","CAREFUL","CATALOG","CEILING","CENTRAL","CERTAIN","CHANNEL","CHAPTER","CHARITY","CHICKEN","CIRCUIT","CITIZEN","CLASSIC","CLEANER","CLIMATE","CLOSING","CLOTHES","COLLECT","COLONY","COMFORT","COMMAND","COMMENT","COMPANY","COMPARE","COMPETE","COMPLEX","CONCEPT","CONCERN","CONCERT","CONDUCT","CONFIRM","CONNECT","CONSIST","CONSULT","CONTACT","CONTAIN","CONTENT","CONTEST","CONTEXT","CONTROL","CONVERT","COOKING","COUNSEL","COUNTER","COVERAGE","CREATOR","CREATURE","CRIMSON","CRITICS","CULTURE","CURTAIN","CUSTODY","DEALING","DECLARE","DECLINE","DEFAULT","DEFENSE","DEGREES","DELIVER","DENSITY","DEPOSIT","DESKTOP","DESPITE","DESTINY","DETECT","DEVELOP","DIAGRAM","DIALECT","DIAMOND","DIGITAL","DILEMMA","DIMOND","DIRECTOR","DISABLE","DISCUSS","DISEASE","DISPLAY","DISPUTE","DISTANT","DISTINCT","DISTRICT","DIVERSE","DOCTRINE","DOMESTIC","DOWNLOAD","DRAWING","DRIVING","DYNASTY","EASTERN","ECONOMY","EDITION","ELDERLY","ELEMENT","EMBASSY","EMOTION","ENGAGED","ENHANCE","ENOUGH","ENTIRE","ENVELOPE","EPISODE","EQUALLY","ESSENCE","ESTATE","ETERNAL","EVENING","EVIDENT","EXACTLY","EXAMINE","EXECUTE","EXHIBIT","EXPENSE","EXPLAIN","EXPLORE","EXPOSED","EXTREME","FACTORY","FAILURE","FANTASY","FEATURE","FEEDING","FICTION","FINANCE","FINDING","FITNESS","FLEXIBLE","FLOATING","FOREIGN","FORWARD","FOUNDER","FRACTION","FREEDOM","FROZEN","FURNACE","GALLERY","GARBAGE","GENERAL","GENETIC","GENUINE","GESTURE","GLIMPSE","GRAVITY","GROCERY","HANDFUL","HARDWARE","HEADACHE","HEADING","HERSELF","HIGHWAY","HOLIDAY","HORIZON","HOSTAGE","HOUSING","HOWEVER","HUNDRED","HUNTING","HYBRID","ILLEGAL","ILLNESS","IMAGINE","IMPROVE","INCLUDE","INITIAL","INQUIRY","INSIGHT","INSTANT","INSTEAD","INTENSE","INTERIOR","INVOLVE","JOURNAL","JOURNEY","JUSTICE","KEYBOARD","KINGDOM","LANDING","LAUNDRY","LEARNED","LEATHER","LECTURE","LEGENDS","LEISURE","LIBERAL","LIBRARY","LICENSE","LIFETIME","LIGHTLY","LOCATED","MACHINE","MAGICAL","MAILBOX","MAINTAIN","MAJORITY","MANAGER","MANDATE","MANKIND","MASSIVE","MATERIAL","MAXIMUM","MEASURE","MEDICAL","MEETING","MENTION","MESSAGE","MILEAGE","MILITARY","MINERAL","MINIMUM","MISSING","MIXTURE","MOMENTS","MONITOR","MONSTER","MORNING","MOUNTAIN","MOVEMENT","MULTIPLE","MUSICAL","MYSTERY","NATURAL","NEGLECT","NETWORK","NEUTRAL","NOTABLE","NOWHERE","NUCLEAR","NURSERY","OBVIOUS","OFFICER","OPENING","OPINION","OPPOSED","ORDINARY","ORGANIC","OUTCOME","OUTLINE","OVERALL","PACKAGE","PAINFUL","PARKING","PARTNER","PASSAGE","PASSING","PASSION","PATTERN","PENALTY","PENSION","PERFECT","PICTURE","PIONEER","PLASTIC","PLATFORM","POLLING","PORTION","POVERTY","PRECISE","PREMISE","PREPARE","PRESENT","PRESSURE","PREVENT","PRIMARY","PRINTER","PRIVACY","PRIVATE","PROCEED","PROCESS","PRODUCE","PROJECT","PROMISE","PROMOTE","PROTECT","PROTEST","PROVIDE","PUBLISH","PURPOSE","PURSUIT","QUALIFY","QUALITY","QUARTER","RAILWAY","READING","REALITY","RECEIVE","RECOVER","REFLECT","REGULAR","RELEASE","REPLACE","REQUEST","REQUIRE","RESERVE","RESOLVE","RESPECT","RESPOND","REVENUE","REVERSE","ROMANCE","ROUTINE","SANDWICH","SCENERY","SCHEDULE","SCRATCH","SECTION","SEGMENT","SENSING","SERVANT","SETTING","SEVERAL","SHELTER","SHOULDER","SHRIMP","SIMPLIFY","SITUATE","SKILFUL","SLIGHTLY","SOCIETY","SOLDIER","SOMEHOW","SOMEONE","SOMEWHAT","SPECIAL","SPECIES","SPECTRUM","SPEAKER","STANDARD","STARTUP","STATION","STORAGE","STRANGE","STRATEGY","STRETCH","STRUCTURE","STUDENT","SUBJECT","SUCCESS","SUGGEST","SUITCASE","SUNRISE","SUNSHINE","SUPPORT","SUPREME","SURFACE","SURGEON","SURVIVE","SUSPECT","SUSTAIN","SYMPATHY","TALENTED","TEACHER","TEENAGE","TELEVISION","TENSION","TERRACE","TERRAIN","TERRIBLE","TEXTURE","THEATER","THERAPY","THEREBY","THOUSAND","THUMBNAIL","TOGETHER","TOMORROW","TOWARDS","TRADING","TRAFFIC","TRAINER","TRANSIT","TREASURE","TRIANGLE","TRIBUTE","TROUBLE","TRUSTED","TUITION","TUNNEL","TYPICAL","UMBRELLA","UNDERGO","UNIFORM","UNKNOWN","UPGRADE","UPWARDS","URGENCY","VACCINE","VACUUM","VARIETY","VEHICLE","VENTURE","VERSION","VETERAN","VICTORY","VILLAGE","VIOLATE","VIRTUAL","VISIBLE","VITAMIN","VOLTAGE","VOLUME","WARNING","WEATHER","WEBSITE","WEDDING","WELCOME","WHENEVER","WHEREAS","WHISPER","WILDLIFE","WITNESS","WORKING","WORKOUT","WRAPPER"
+  ],
+  french: [
+    "LE","LA","LES","DE","DES","UN","UNE","ET","EST","QUE","QUI","PAR","SUR","PAS","SON","SES","LUI","ELLE","TOUT","TOUS","MOI","TOI","NOUS","VOUS","ICI","LA","OU","NI","SI","VU","EU","OUI","NON",
+    "AVEC","DANS","POUR","PLUS","BIEN","SANS","SOUS","VERS","CHEZ","MAIS","DONC","AUSSI","AVANT","APRES","CONTRE","JAMAIS","TOUJOURS","MAINTENANT","BEAUCOUP","QUELQUE","CHAQUE","AUTRE","MEME","TRES","ASSEZ","TROP","PEU","RIEN","AUCUN","CELUI","CELLE","CEUX","QUAND","COMME","DEPUIS","PENDANT","JUSQUE","ENTRE","PARMI",
+    "AINSI","ALORS","ENCORE","SOUVENT","PARFOIS","PERSONNE","HOMME","FEMME","ENFANT","FAMILLE","MAISON","VILLE","PAYS","MONDE","TEMPS","JOUR","ANNEE","HEURE","MINUTE","MOMENT","VIE","MORT","AMOUR","AMI","TRAVAIL","ECOLE","LIVRE","MOT","LANGUE","HISTOIRE","MUSIQUE","ART","SCIENCE","NATURE","ANIMAL","PLANTE","ARBRE","FLEUR","SOLEIL","LUNE","ETOILE","CIEL","MER","MONTAGNE","RIVIERE","FORET","ROUTE","VOITURE","TRAIN","AVION","BATEAU","VELO","ORDINATEUR","TELEPHONE","INTERNET","INFORMATION","COMMUNICATION",
+    "DEVELOPPEMENT","UNIVERSITE","GOUVERNEMENT","SOCIETE","ECONOMIE","POLITIQUE","CULTURE","EDUCATION","SANTE","ENVIRONNEMENT","ADMINISTRATION","AGRICULTURE","ARCHITECTURE","BIBLIOTHEQUE","CIRCULATION","CIVILISATION","COMPETITION","CONSTRUCTION","CONVERSATION","CORRESPONDANCE","DEMOCRATIE","DEMONSTRATION","DESTINATION","DISTRIBUTION","EXPERIENCE","EXPLICATION","GENERATION","IMAGINATION","INDEPENDANCE","INDUSTRIE","INSTALLATION","INSTITUTION","INTELLIGENCE","INTERPRETATION","INVESTISSEMENT","LEGISLATION","LITTERATURE",
+    "ABSOLU","ACCORD","ACTEUR","ADRESSE","AFFAIRE","AGENCE","AIGUILLE","AIMABLE","AJOUTER","ALLUMER","AMBIANCE","AMENDER","AMOUREUX","ANALYSE","ANCIEN","ANGLAIS","ANNONCE","APPAREIL","APPETIT","APPORTER","APPROCHE","ARGENT","ARMOIRE","ARRIVEE","ARTICLE","ASPECT","ASSIETTE","ATELIER","ATTENDRE","ATTITUDE","AUGMENTER","AUJOURD","AUTOMNE","AVENTURE","AVENUE","BALCON","BANDE","BANQUE","BATIMENT","BATON","BEAUCOUP","BESOIN","BILLET","BLESSER","BOISSON","BOUCHE","BOUGIE","BOUTIQUE","BUREAU","CADEAU","CALENDRIER","CAMPAGNE","CANARD","CAPABLE","CAPITAINE","CARRIERE","CARTON","CATEGORIE","CENTAINE","CENTRE","CERTAIN","CHAMBRE","CHAMPION","CHANCE","CHANGER","CHANSON","CHAPEAU","CHARGE","CHATEAU","CHAUFFAGE","CHEMISE","CHEVAL","CHIFFRE","CHIMIE","CHOISIR","CHOSE","CIRCONSTANCE","CITOYEN","CLASSE","CLIENT","COLLEGUE","COLONNE","COMBIEN","COMMANDE","COMMENCER","COMMERCE","COMPAGNIE","COMPLET","COMPRENDRE","COMPTER","CONCERT","CONDITION","CONFIANCE","CONFORT","CONGRES","CONNAITRE","CONSCIENCE","CONSEIL","CONSTATER","CONTINUER","CONTRAIRE","CONTRAT","CONVENIR","COURAGE","COURRIER","COUSIN","COUTEAU","COUTUME","COUVERTURE","CRAINDRE","CRAYON","CREATION","CROIRE","CUISINE","CULTIVER","CURIEUX","DANGER","DECIDER","DECOUVRIR","DEFENSE","DEGATS","DEJEUNER","DELICAT","DEMANDE","DENTISTE","DEPARTEMENT","DERANGER","DERNIER","DESIRER","DESSIN","DETRUIRE","DEVENIR","DEVOIR","DIFFICILE","DIFFUSER","DIMANCHE","DIRECTION","DIRIGER","DISCOURS","DISCUTER","DISPARAITRE","DISPOSER","DISTANCE","DISTINGUER","DIVERTIR","DOMAINE","DOMMAGE","DOULEUR","DUREE","ECHANGE","ECLAIRER","ECONOMISER","ECOUTER","EFFACER","EFFICACE","EFFORT","EGALITE","ELECTRICITE","ELEMENT","ELEVER","EMBRASSER","EMISSION","EMOTION","EMPLOI","EMPORTER","ENCORE","ENERGIE","ENFANCE","ENGAGER","ENNEMI","ENSEIGNER","ENSEMBLE","ENTENDRE","ENTREPRISE","ENVIRON","ENVOYER","EPOQUE","EQUIPE","ESCALIER","ESPACE","ESPERER","ESPRIT","ESSAYER","ETABLIR","ETONNER","ETRANGER","ETUDIANT","EVENEMENT","EVIDENT","EXAMEN","EXCELLENT","EXCUSER","EXERCICE","EXISTER","EXPLIQUER","EXPRIMER","EXTERIEUR","FABRIQUER","FACILE","FACON","FATIGUE","FAUTEUIL","FAVORI","FELICITER","FERMER","FETE","FIGURE","FINALEMENT","FONCTION","FONDER","FORMATION","FORTUNE","FOURCHETTE","FRAGILE","FRANCAIS","FREQUENT","FRONTIERE","FUMER","GAGNER","GARANTIR","GARCON","GENERAL","GENTIL","GESTE","GLACE","GOUTER","GRENIER","GUERISON","GUERRE","HABITER","HABITUDE","HASARD","HAUTEUR","HERBE","HISTOIRE","HIVER","HONNEUR","HONTE","HOPITAL","HORLOGE","HUMEUR","IDENTIFIER","IGNORER","ILLUSTRER","IMAGE","IMMEUBLE","IMPORTANT","IMPOSSIBLE","IMPRESSION","INCONNU","INDIQUER","INFLUENCE","INSISTER","INSTANT","INTEGRER","INTENTION","INTERESSER","INTERIEUR","INTRODUIRE","INVITER","JARDIN","JEUNESSE","JOUEUR","JOURNAL","JOYEUX","JUGEMENT","JUSTICE","LARGEUR","LECTURE","LEGUME","LENTEMENT","LIBERTE","LIMITE","LOISIR","LONGTEMPS","LORSQUE","LUMIERE","MAGASIN","MAINTENIR","MALADIE","MALHEUR","MANIERE","MANQUER","MARCHE","MARIAGE","MATIERE","MECANIQUE","MEDECIN","MEILLEUR","MELANGE","MEMBRE","MENACER","MENAGE","MENTIONNER","MERVEILLE","METTRE","MEUBLE","MILIEU","MINISTRE","MODIFIER","MOITIE","MONNAIE","MONTRER","MORCEAU","MOTIF","MOUVEMENT","MULTIPLE","MYSTERE","NAISSANCE","NATIONAL","NAVIRE","NECESSAIRE","NEIGE","NIVEAU","NOMBREUX","NOTION","NOURRITURE","NOUVELLE","OBJECTIF","OBLIGER","OBSERVER","OBTENIR","OCCASION","OCCUPER","OFFRIR","OMBRE","OPINION","OPPOSER","ORDINAIRE","ORDONNER","ORGANISER","ORIGINE","OUVRIR","PAIEMENT","PAISIBLE","PANTALON","PAQUET","PARAITRE","PARDON","PAREIL","PARFAIT","PARLER","PARTAGER","PARTICULIER","PARTIR","PASSER","PATIENCE","PAUVRE","PAYSAGE","PEINTURE","PENDULE","PENSER","PERDRE","PERMETTRE","PERSONNAGE","PETIT","PEUPLE","PHRASE","PIECE","PLAISIR","PLANTER","PLUSIEURS","POCHE","POESIE","POINTURE","POISSON","POLITESSE","POPULATION","PORTER","POSER","POSSEDER","POSSIBLE","POUVOIR","PRATIQUE","PRECIEUX","PREFERER","PREMIER","PRENDRE","PREPARER","PRESENTER","PRESQUE","PRESSER","PRETENDRE","PREUVE","PRINCIPE","PRISON","PRIVE","PROBABLE","PROBLEME","PROCEDER","PROCHAIN","PRODUIRE","PROFESSEUR","PROFOND","PROGRAMME","PROJET","PROMESSE","PROPOSER","PROPRE","PROTEGER","PROUVER","PUBLIC","PUISSANCE","QUALITE","QUANTITE","QUARTIER","QUESTION","QUOTIDIEN","RACONTER","RAISON","RAPIDE","RAPPELER","RAPPORT","RASSURER","RECEVOIR","RECHERCHE","RECOMMENCER","RECONNAITRE","REGARDER","REGION","REGLER","REGRETTER","RELATION","REMARQUER","REMERCIER","REMPLACER","REMPLIR","RENCONTRER","RENDRE","RENSEIGNER","REPAS","REPONDRE","REPOS","REPRENDRE","RESPECTER","RESPONSABLE","RESSEMBLER","RESTAURANT","RESULTAT","RETARD","RETOUR","RETROUVER","REUNION","REUSSIR","REVENIR","REVER","RICHESSE","RIVIERE","ROMAN","ROUTE","SAISON","SALAIRE","SATISFAIRE","SAUVER","SCIENTIFIQUE","SECOURS","SEMAINE","SENTIMENT","SEPARER","SERIEUX","SERVICE","SEULEMENT","SIGNIFIER","SILENCE","SIMPLE","SITUATION","SOCIETE","SOLEIL","SOLUTION","SOMMEIL","SORTIR","SOUFFRIR","SOUHAITER","SOUVENIR","SPECTACLE","STATION","SUCCES","SUFFIRE","SUIVANT","SUPPORTER","SUPPOSER","SURPRENDRE","SURTOUT","SYMPATHIQUE","SYSTEME","TABLEAU","TANDIS","TELEVISION","TEMOIN","TENDANCE","TENTER","TERMINER","TERRAIN","TERRIBLE","TERRITOIRE","THEATRE","TOUCHER","TOURNER","TRADITION","TRANQUILLE","TRANSPORT","TRAVERSER","TRISTESSE","TROUVER","UNIQUE","USAGE","UTILISER","VACANCES","VALEUR","VEHICULE","VENDRE","VERITABLE","VERITE","VETEMENT","VIEILLIR","VILLAGE","VISAGE","VISITER","VITESSE","VOISIN","VOITURE","VOLONTE","VOYAGE","VOYELLE"
+  ],
+  german: [
+    "ICH","DU","ER","SIE","ES","WIR","IHR","MAN","WER","WAS","WO","WIE","JA","NEIN","UND","ODER","ABER","DENN","WEIL","WENN",
+    "DASS","NICHT","AUCH","NUR","SEHR","GUT","SCHLECHT","GROSS","KLEIN","ALT","NEU","SCHNELL","LANGSAM","HEISS","KALT",
+    "HOCH","TIEF","LANG","KURZ","VIEL","WENIG","HAUS","STADT","LAND","BERG","FLUSS","MEER","BAUM","BLUME","GARTEN",
+    "STRASSE","BRUECKE","SCHLOSS","KIRCHE","MUSEUM","BIBLIOTHEK","KRANKENHAUS","APOTHEKE","RESTAURANT","GESCHAEFT",
+    "MARKT","BAHNHOF","FLUGHAFEN","AUTOBAHN","FAHRRAD","MOTORRAD","FLUGZEUG","SCHIFF","ZUG","BUS","TAXI","STRASSENBAHN",
+    "FREUND","ARBEIT","SCHULE","SPRACHE","NATUR","FAMILIE","FREIHEIT","GESELLSCHAFT","ENTSCHEIDUNG","WISSENSCHAFT",
+    "REGIERUNG","UNTERNEHMEN","VERANTWORTUNG","ENTWICKLUNG","BEDEUTUNG","GESCHWINDIGKEIT","AUFMERKSAMKEIT",
+    "ZUSAMMENARBEIT","VERANSTALTUNG","GESUNDHEIT","SICHERHEIT","FREIZEIT","FEIERTAG","GEBURTSTAG","SOMMER","WINTER",
+    "HERBST","FRUEHLING","REGEN","SCHNEE","WOLKE","HIMMEL","ERDE","WASSER","FEUER","LUFT","COMPUTER","TECHNIK","GESCHICHTE",
+    "MAEDCHEN","JUNGE","MUTTER","VATER","BRUDER","SCHWESTER","GROSSMUTTER","GROSSVATER","ONKEL","TANTE","KIND","BABY",
+    "SCHOEN","HAESSLICH","GRUEN","BLAU","ROT","GELB","WEISS","SCHWARZ","BRAUN","GRAU","ORANGE","ROSA",
+    "GLUECK","LIEBE","HOFFNUNG","ANGST","FREUDE","TRAUER","AERGER","UEBERRASCHUNG","MUT","GEDULD","VERTRAUEN","RESPEKT",
+    "FENSTER","TUER","TISCH","STUHL","BETT","SCHRANK","LAMPE","SPIEGEL","TEPPICH","VORHANG","KUECHE","BADEZIMMER",
+    "FRUEHSTUECK","MITTAGESSEN","ABENDESSEN","BROT","BUTTER","KAESE","MILCH","EIER","GEMUESE","OBST","FLEISCH","FISCH",
+    "KARTOFFEL","ZWIEBEL","MOEHRE","APFEL","BIRNE","BANANE","ORANGE","TRAUBE","ERDBEERE","KIRSCHE","ZITRONE",
+    "MUSIK","KUNST","LITERATUR","PHILOSOPHIE","MATHEMATIK","PHYSIK","CHEMIE","BIOLOGIE","GEOGRAFIE","GESCHICHTE",
+    "UNIVERSITAET","BIBLIOTHEK","VORLESUNG","PRUEFUNG","ZEUGNIS","AUSBILDUNG","BERUF","KARRIERE","GEHALT","URLAUB",
+    "FLUGZEUG","EISENBAHN","STRASSENVERKEHR","VERKEHRSAMPEL","PARKPLATZ","TANKSTELLE","WERKSTATT","FAHRSCHULE",
+    "KRANKHEIT","GESUNDHEIT","ARZT","KRANKENSCHWESTER","MEDIKAMENT","BEHANDLUNG","OPERATION","IMPFUNG","THERAPIE",
+    "REGIERUNG","PARLAMENT","WAHL","GESETZ","GERICHT","POLIZEI","FEUERWEHR","ARMEE","BOTSCHAFT","MINISTERIUM",
+    "WIRTSCHAFT","INDUSTRIE","LANDWIRTSCHAFT","HANDWERK","HANDEL","BANK","VERSICHERUNG","STEUER","BUDGET","INVESTITION",
+    "SCHWIMMEN","LAUFEN","SPRINGEN","TANZEN","SINGEN","SPIELEN","LESEN","SCHREIBEN","ZEICHNEN","MALEN","KOCHEN","BACKEN",
+    "SONNE","MOND","STERN","PLANET","GALAXIE","UNIVERSUM","WELTALL","RAKETE","SATELLIT","ASTRONAUT",
+    "BERGSTEIGEN","WANDERN","CAMPING","ANGELN","JAGEN","GAERTNERN","FOTOGRAFIEREN","REISEN","ENTDECKEN","ERFORSCHEN"
+  ]
+};
+
+const DEFAULT_SETTINGS = {
+  freq: 650,
+  dot: 90,
+  dash: 270,
+  symbolGap: 90,
+  charGap: 270,
+  wordGap: 630
+};
+
+let currentAnswer = ''; // words separated by single spaces
+let audioCtx = null;
+
+const numCharsInput = document.getElementById('numChars');
+const numWordsInput = document.getElementById('numWords');
+const newChallengeBtn = document.getElementById('newChallengeBtn');
+const challengeCard = document.getElementById('challengeCard');
+const morseDisplay = document.getElementById('morseDisplay');
+const playBtn = document.getElementById('playBtn');
+const answerInput = document.getElementById('answerInput');
+const checkBtn = document.getElementById('checkBtn');
+const resultArea = document.getElementById('resultArea');
+const resultStatus = document.getElementById('resultStatus');
+const resultCompare = document.getElementById('resultCompare');
+const charPoolInput = document.getElementById('charPoolInput');
+const charPoolWarning = document.getElementById('charPoolWarning');
+const autoPlayToggle = document.getElementById('autoPlayToggle');
+const charsetSection = document.getElementById('charsetSection');
+const languageRow = document.getElementById('languageRow');
+const ngramHint = document.getElementById('ngramHint');
+
+const soundSettingsToggle = document.getElementById('soundSettingsToggle');
+const soundSettingsPanel = document.getElementById('soundSettingsPanel');
+const freqInput = document.getElementById('freqInput');
+const dotInput = document.getElementById('dotInput');
+const dashInput = document.getElementById('dashInput');
+const symbolGapInput = document.getElementById('symbolGapInput');
+const charGapInput = document.getElementById('charGapInput');
+const wordGapInput = document.getElementById('wordGapInput');
+const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+
+function applyPresetToTextarea() {
+  const mode = document.querySelector('input[name="charset"]:checked').value;
+  charPoolInput.value = PRESETS[mode].join(' ');
+  validateCharPool();
+}
+
+document.querySelectorAll('input[name="charset"]').forEach(el => {
+  el.addEventListener('change', applyPresetToTextarea);
+});
+
+function parseCharPool(rawValue) {
+  const seen = new Set();
+  const invalid = new Set();
+  const pool = [];
+  for (const ch of rawValue) {
+    if (/\s/.test(ch)) continue; // ignore whitespace/newlines used as separators
+    const upper = ch.toUpperCase();
+    if (!MORSE.hasOwnProperty(upper)) {
+      invalid.add(ch);
+      continue;
+    }
+    if (!seen.has(upper)) {
+      seen.add(upper);
+      pool.push(upper);
+    }
+  }
+  return { pool, invalid: Array.from(invalid) };
+}
+
+function validateCharPool() {
+  const { pool, invalid } = parseCharPool(charPoolInput.value);
+  if (invalid.length > 0) {
+    charPoolWarning.textContent = 'Ignored (no Morse mapping): ' + invalid.join(' ');
+  } else if (pool.length === 0) {
+    charPoolWarning.textContent = 'No valid characters yet — add at least one.';
+  } else {
+    charPoolWarning.textContent = '';
+  }
+  return pool;
+}
+
+charPoolInput.addEventListener('input', validateCharPool);
+
+function updateSuccessionModeUI() {
+  const mode = document.querySelector('input[name="successionMode"]:checked').value;
+  if (mode === 'ngram') {
+    charsetSection.classList.add('hidden');
+    languageRow.style.display = 'flex';
+    ngramHint.classList.remove('hidden');
+  } else {
+    charsetSection.classList.remove('hidden');
+    languageRow.style.display = 'none';
+    ngramHint.classList.add('hidden');
+  }
+}
+
+document.querySelectorAll('input[name="successionMode"]').forEach(el => {
+  el.addEventListener('change', updateSuccessionModeUI);
+});
+updateSuccessionModeUI();
+
+function getNGramWord(language, n) {
+  const words = NGRAM_WORDLISTS[language] || NGRAM_WORDLISTS.english;
+  const candidates = words.filter(w => w.length >= n);
+  let base;
+  if (candidates.length > 0) {
+    base = candidates[Math.floor(Math.random() * candidates.length)];
+  } else {
+    // Fallback: concatenate random words until long enough (rare, only for very large n)
+    base = '';
+    while (base.length < n) {
+      base += words[Math.floor(Math.random() * words.length)];
+    }
+  }
+  const maxStart = base.length - n;
+  const start = Math.floor(Math.random() * (maxStart + 1));
+  return base.substr(start, n);
+}
+
+soundSettingsToggle.addEventListener('click', () => {
+  const isHidden = soundSettingsPanel.classList.contains('hidden');
+  soundSettingsPanel.classList.toggle('hidden');
+  soundSettingsToggle.textContent = isHidden ? '⚙️ Sound settings ▴' : '⚙️ Sound settings ▾';
+});
+
+resetSettingsBtn.addEventListener('click', () => {
+  freqInput.value = DEFAULT_SETTINGS.freq;
+  dotInput.value = DEFAULT_SETTINGS.dot;
+  dashInput.value = DEFAULT_SETTINGS.dash;
+  symbolGapInput.value = DEFAULT_SETTINGS.symbolGap;
+  charGapInput.value = DEFAULT_SETTINGS.charGap;
+  wordGapInput.value = DEFAULT_SETTINGS.wordGap;
+});
+
+function getSoundSettings() {
+  const clampMin = (val, min) => (isNaN(val) || val < min ? min : val);
+  return {
+    freq: clampMin(parseFloat(freqInput.value), 50),
+    dot: clampMin(parseFloat(dotInput.value), 10) / 1000,
+    dash: clampMin(parseFloat(dashInput.value), 10) / 1000,
+    symbolGap: clampMin(parseFloat(symbolGapInput.value), 0) / 1000,
+    charGap: clampMin(parseFloat(charGapInput.value), 0) / 1000,
+    wordGap: clampMin(parseFloat(wordGapInput.value), 0) / 1000
+  };
+}
+
+function generateChallenge() {
+  let wordLen = parseInt(numCharsInput.value, 10);
+  if (isNaN(wordLen) || wordLen < 1) wordLen = 1;
+  if (wordLen > 10) wordLen = 10;
+  numCharsInput.value = wordLen;
+
+  let numWords = parseInt(numWordsInput.value, 10);
+  if (isNaN(numWords) || numWords < 1) numWords = 1;
+  if (numWords > 10) numWords = 10;
+  numWordsInput.value = numWords;
+
+  const successionMode = document.querySelector('input[name="successionMode"]:checked').value;
+  const words = [];
+
+  if (successionMode === 'ngram') {
+    const language = document.querySelector('input[name="ngramLanguage"]:checked').value;
+    for (let w = 0; w < numWords; w++) {
+      words.push(getNGramWord(language, wordLen));
+    }
+  } else {
+    let pool = validateCharPool();
+    if (pool.length === 0) {
+      pool = LETTERS; // safe fallback so the app never breaks
+    }
+    for (let w = 0; w < numWords; w++) {
+      let word = '';
+      for (let i = 0; i < wordLen; i++) {
+        word += pool[Math.floor(Math.random() * pool.length)];
+      }
+      words.push(word);
+    }
+  }
+
+  currentAnswer = words.join(' ');
+
+  const morseDisplayParts = words.map(word =>
+    word.split('').map(c => MORSE[c]).join('   ')
+  );
+  morseDisplay.textContent = morseDisplayParts.join('   /   ');
+
+  challengeCard.style.display = 'block';
+  resultArea.classList.add('hidden');
+  answerInput.value = '';
+  answerInput.maxLength = numWords * wordLen + numWords + 5;
+  answerInput.placeholder = numWords > 1 ? 'Type the words, separated by spaces' : 'Type your answer';
+  answerInput.focus();
+
+  if (autoPlayToggle.checked) {
+    playMorse(currentAnswer);
+  }
+}
+
+function playTone(startTime, duration, freq) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.frequency.value = freq;
+  osc.type = 'sine';
+  const rampTime = Math.min(0.005, duration / 4);
+  gain.gain.setValueAtTime(0, startTime);
+  gain.gain.linearRampToValueAtTime(0.3, startTime + rampTime);
+  gain.gain.setValueAtTime(0.3, startTime + duration - rampTime);
+  gain.gain.linearRampToValueAtTime(0, startTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration);
+}
+
+function playMorse(answer) {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
+  const settings = getSoundSettings();
+  let t = audioCtx.currentTime + 0.1;
+
+  const words = answer.split(' ');
+
+  words.forEach((word, wIndex) => {
+    const morseParts = word.split('').map(c => MORSE[c]);
+    morseParts.forEach((code, cIndex) => {
+      for (let i = 0; i < code.length; i++) {
+        const symbol = code[i];
+        const duration = symbol === '.' ? settings.dot : settings.dash;
+        playTone(t, duration, settings.freq);
+        t += duration;
+        if (i < code.length - 1) {
+          t += settings.symbolGap; // gap between elements within the same character
+        }
+      }
+      if (cIndex < morseParts.length - 1) {
+        t += settings.charGap; // gap between characters within the same word
+      }
+    });
+    if (wIndex < words.length - 1) {
+      t += settings.wordGap; // gap between words
+    }
+  });
+}
+
+newChallengeBtn.addEventListener('click', generateChallenge);
+
+playBtn.addEventListener('click', () => {
+  if (currentAnswer) playMorse(currentAnswer);
+});
+
+checkBtn.addEventListener('click', () => {
+  const rawUserAnswer = answerInput.value.toUpperCase().trim();
+
+  const correctWords = currentAnswer.split(' ');
+  const userWords = rawUserAnswer.length ? rawUserAnswer.split(/\s+/) : [];
+
+  let compareHtml = '';
+  let allCorrect = correctWords.length === userWords.length;
+
+  correctWords.forEach((correctWord, wIndex) => {
+    const userWord = userWords[wIndex] || '';
+    let wordHtml = '';
+    let wordCorrect = correctWord.length === userWord.length;
+
+    for (let i = 0; i < correctWord.length; i++) {
+      const correctChar = correctWord[i];
+      const userChar = userWord[i] || '_';
+      const isMatch = userChar === correctChar;
+      if (!isMatch) wordCorrect = false;
+      wordHtml += `<span class="char-box ${isMatch ? 'char-correct' : 'char-incorrect'}">${correctChar}</span>`;
+    }
+
+    if (!wordCorrect) allCorrect = false;
+    compareHtml += `<span class="word-group">${wordHtml}</span>`;
+  });
+
+  resultStatus.textContent = allCorrect ? '✅ Correct!' : '❌ Not quite';
+  resultStatus.className = 'result-status ' + (allCorrect ? 'correct' : 'incorrect');
+  resultCompare.innerHTML = compareHtml;
+  resultArea.classList.remove('hidden');
+});
+
+answerInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') checkBtn.click();
+});
+
+// Initialize the character pool textarea with the default preset (Letters)
+applyPresetToTextarea();
+</script>
+</body>
+</html>
