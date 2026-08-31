@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Morse Code Trainer</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
   :root {
     --primary: #2563eb;
@@ -197,6 +202,37 @@
     gap: 10px;
     margin-bottom: 10px;
   }
+  .morse-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .morse-label-row label {
+    margin-bottom: 0;
+  }
+  .eye-btn {
+    width: auto;
+    background: transparent;
+    border: none;
+    padding: 6px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s, background 0.2s;
+  }
+  .eye-btn:hover {
+    background: #334155;
+    color: var(--text);
+  }
+  .eye-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+  }
   .morse-display {
     font-size: 1.6rem;
     letter-spacing: 3px;
@@ -208,9 +244,20 @@
     background: #0f172a;
     border-radius: 12px;
     padding: 16px;
-    margin-bottom: 14px;
+    margin-bottom: 8px;
     word-break: break-word;
     font-family: 'Courier New', monospace;
+    transition: filter 0.2s;
+  }
+  .morse-display.morse-hidden {
+    filter: blur(10px);
+    user-select: none;
+  }
+  .morse-hint {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78rem;
+    margin-bottom: 14px;
   }
   .answer-input {
     width: 100%;
@@ -285,6 +332,10 @@
           <label for="numWords">Number of words (1–10)</label>
           <input type="number" id="numWords" min="1" max="10" value="1">
         </div>
+      </div>
+
+      <div class="toggle-row">
+        <label><input type="checkbox" id="showMorseDefaultToggle"> Show Morse code by default</label>
       </div>
 
       <div class="row">
@@ -371,11 +422,18 @@
   </div>
 
   <div class="card" id="challengeCard" style="display:none;">
-    <label>Morse Code</label>
-    <div class="morse-display" id="morseDisplay">— · — ·</div>
     <div class="btn-row">
       <button class="btn-secondary" id="playBtn">🔊 Play Sound</button>
     </div>
+
+    <div class="morse-label-row">
+      <label style="margin-bottom:0;">Morse Code</label>
+      <button class="eye-btn" id="toggleMorseBtn" aria-label="Show or hide Morse code" title="Show/hide Morse code">
+        <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
+    </div>
+    <div class="morse-display morse-hidden" id="morseDisplay">— · — ·</div>
+    <div class="morse-hint hidden" id="morseHint">Tap the eye icon to reveal</div>
 
     <label for="answerInput">Your answer</label>
     <input type="text" id="answerInput" class="answer-input" maxlength="40" placeholder="Type your answer">
@@ -471,14 +529,22 @@ const DEFAULT_SETTINGS = {
   wordGap: 630
 };
 
+const EYE_OPEN_PATH = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+const EYE_OFF_PATH = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-6.06"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+
 let currentAnswer = ''; // words separated by single spaces
 let audioCtx = null;
+let morseHidden = true;
 
 const numCharsInput = document.getElementById('numChars');
 const numWordsInput = document.getElementById('numWords');
 const newChallengeBtn = document.getElementById('newChallengeBtn');
 const challengeCard = document.getElementById('challengeCard');
 const morseDisplay = document.getElementById('morseDisplay');
+const morseHint = document.getElementById('morseHint');
+const toggleMorseBtn = document.getElementById('toggleMorseBtn');
+const eyeIcon = document.getElementById('eyeIcon');
+const showMorseDefaultToggle = document.getElementById('showMorseDefaultToggle');
 const playBtn = document.getElementById('playBtn');
 const answerInput = document.getElementById('answerInput');
 const checkBtn = document.getElementById('checkBtn');
@@ -567,6 +633,25 @@ document.querySelectorAll('input[name="successionMode"]').forEach(el => {
   el.addEventListener('change', updateSuccessionModeUI);
 });
 updateSuccessionModeUI();
+
+function updateMorseVisibility() {
+  if (morseHidden) {
+    morseDisplay.classList.add('morse-hidden');
+    morseHint.classList.remove('hidden');
+    eyeIcon.innerHTML = EYE_OFF_PATH;
+  } else {
+    morseDisplay.classList.remove('morse-hidden');
+    morseHint.classList.add('hidden');
+    eyeIcon.innerHTML = EYE_OPEN_PATH;
+  }
+}
+
+toggleMorseBtn.addEventListener('click', () => {
+  morseHidden = !morseHidden;
+  updateMorseVisibility();
+});
+
+updateMorseVisibility();
 
 function getNGramWord(language, n) {
   const words = NGRAM_WORDLISTS[language] || NGRAM_WORDLISTS.english;
@@ -665,6 +750,9 @@ function generateChallenge() {
   answerInput.maxLength = numWords * wordLen + numWords + 5;
   answerInput.placeholder = numWords > 1 ? 'Type the words, separated by spaces' : 'Type your answer';
   answerInput.focus();
+
+  morseHidden = !showMorseDefaultToggle.checked;
+  updateMorseVisibility();
 
   if (autoPlayToggle.checked) {
     playMorse(currentAnswer);
@@ -766,6 +854,15 @@ answerInput.addEventListener('keydown', (e) => {
 
 // Initialize the character pool textarea with the default preset (Letters)
 applyPresetToTextarea();
+
+// Register service worker for offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((err) => {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
