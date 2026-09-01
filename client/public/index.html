@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Morse Code Trainer</title>
 <link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="layout.css">
 <meta name="theme-color" content="#0f172a">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -39,71 +40,6 @@
     text-align: center;
     font-size: 1.6rem;
     margin-bottom: 20px;
-  }
-  .app-header { position: relative; }
-  .app-header h1 { padding: 0 48px; }
-  .menu-btn {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 44px;
-    height: 44px;
-    padding: 11px;
-    transform: translateY(-50%);
-    background: transparent;
-    color: var(--text);
-  }
-  .menu-btn:hover { background: #1e293b; }
-  .menu-btn:active { transform: translateY(-50%) scale(0.97); }
-  .menu-icon, .menu-icon::before, .menu-icon::after {
-    display: block;
-    width: 22px;
-    height: 2px;
-    border-radius: 2px;
-    background: currentColor;
-  }
-  .menu-icon { position: relative; }
-  .menu-icon::before, .menu-icon::after { position: absolute; left: 0; content: '' }
-  .menu-icon::before { top: -7px; }
-  .menu-icon::after { top: 7px; }
-  .menu-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    border: 0;
-    border-radius: 0;
-    background: rgba(2, 6, 23, 0.68);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-  .side-menu {
-    position: fixed;
-    inset: 0 auto 0 0;
-    z-index: 21;
-    width: min(82vw, 280px);
-    padding: 24px 16px;
-    background: var(--card-bg);
-    box-shadow: 8px 0 24px rgba(0,0,0,0.35);
-    transform: translateX(-105%);
-    visibility: hidden;
-    transition: transform 0.22s ease, visibility 0s 0.22s;
-  }
-  .menu-open .menu-backdrop { opacity: 1; pointer-events: auto; }
-  .menu-open .side-menu { transform: translateX(0); visibility: visible; transition-delay: 0s; }
-  .side-menu-title { margin: 0 8px 22px; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
-  .side-menu a {
-    display: block;
-    padding: 12px;
-    border-radius: 8px;
-    color: var(--text);
-    font-weight: 600;
-    text-decoration: none;
-  }
-  .side-menu a:hover { background: #334155; }
-  .side-menu a[aria-current="page"] {
-    background: rgba(37, 99, 235, 0.2);
-    color: #93c5fd;
   }
   .card {
     background: var(--card-bg);
@@ -358,21 +294,7 @@
 </style>
 </head>
 <body>
-<button class="menu-backdrop" id="menuBackdrop" type="button" aria-label="Close navigation menu" aria-hidden="true" tabindex="-1"></button>
-<nav class="side-menu" id="sideMenu" aria-label="Main navigation" aria-hidden="true">
-  <p class="side-menu-title">Morse tools</p>
-  <a href="index.html" aria-current="page">Trainer</a>
-  <a href="translator.html">Text translator</a>
-  <a href="tree.html">Morse tree</a>
-  <a href="settings.html">Sound settings</a>
-</nav>
-<div class="app">
-  <header class="app-header">
-    <button class="menu-btn" id="menuBtn" type="button" aria-label="Open navigation menu" aria-controls="sideMenu" aria-expanded="false">
-      <span class="menu-icon" aria-hidden="true"></span>
-    </button>
-    <h1>📡 Morse Code Trainer</h1>
-  </header>
+<morse-layout page-title="Morse Code Trainer" current-page="index.html">
 
   <div class="card">
     <button class="section-title-btn" id="challengeSettingsToggle">
@@ -465,8 +387,9 @@
       <div class="result" id="resultCompare"></div>
     </div>
   </div>
-</div>
+</morse-layout>
 
+<script src="layout.js"></script>
 <script>
 const MORSE = {
   'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
@@ -569,26 +492,6 @@ const ngramHint = document.getElementById('ngramHint');
 const challengeSettingsToggle = document.getElementById('challengeSettingsToggle');
 const challengeSettingsBody = document.getElementById('challengeSettingsBody');
 const challengeSettingsArrow = document.getElementById('challengeSettingsArrow');
-
-const menuBtn = document.getElementById('menuBtn');
-const menuBackdrop = document.getElementById('menuBackdrop');
-const sideMenu = document.getElementById('sideMenu');
-
-function setMenuOpen(isOpen) {
-  document.body.classList.toggle('menu-open', isOpen);
-  menuBtn.setAttribute('aria-expanded', String(isOpen));
-  menuBtn.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
-  menuBackdrop.setAttribute('aria-hidden', String(!isOpen));
-  sideMenu.setAttribute('aria-hidden', String(!isOpen));
-  if (isOpen) sideMenu.querySelector('a').focus();
-  else menuBtn.focus();
-}
-
-menuBtn.addEventListener('click', () => setMenuOpen(!document.body.classList.contains('menu-open')));
-menuBackdrop.addEventListener('click', () => setMenuOpen(false));
-document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && document.body.classList.contains('menu-open')) setMenuOpen(false);
-});
 
 const SOUND_SETTINGS_KEY = 'morse-trainer-sound-settings';
 const TRAINER_SETTINGS_KEY = 'morse-trainer-settings';
@@ -768,12 +671,12 @@ function getSoundSettings() {
   };
   return {
     autoPlay: savedSettings.autoPlay !== false,
-    freq: clamp(savedSettings.freqInput, 650, 100, 2000),
-    dot: clamp(savedSettings.dotInput, 90, 20, 1000) / 1000,
-    dash: clamp(savedSettings.dashInput, 270, 20, 3000) / 1000,
-    symbolGap: clamp(savedSettings.symbolGapInput, 90, 0, 1000) / 1000,
-    charGap: clamp(savedSettings.charGapInput, 270, 0, 3000) / 1000,
-    wordGap: clamp(savedSettings.wordGapInput, 630, 0, 5000) / 1000
+    freq: clamp(savedSettings.freqInput, 600, 100, 2000),
+    dot: clamp(savedSettings.dotInput, 100, 20, 1000) / 1000,
+    dash: clamp(savedSettings.dashInput, 300, 20, 3000) / 1000,
+    symbolGap: clamp(savedSettings.symbolGapInput, 100, 0, 1000) / 1000,
+    charGap: clamp(savedSettings.charGapInput, 300, 0, 3000) / 1000,
+    wordGap: clamp(savedSettings.wordGapInput, 700, 0, 5000) / 1000
   };
 }
 
