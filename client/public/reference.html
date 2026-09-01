@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse Code Reference</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="layout.css">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root { --primary: #2563eb; --bg: #0f172a; --card-bg: #1e293b; --text: #f1f5f9; --muted: #94a3b8; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; padding: 16px; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .app { width: 100%; max-width: 680px; margin: 0 auto; }
+  h1 { margin: 0 0 20px; text-align: center; font-size: 1.6rem; }
+  .reference-section { margin-bottom: 22px; }
+  h2 { margin: 0 0 8px; color: var(--muted); font-size: 0.9rem; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; table-layout: fixed; border: 1px solid #334155; background: var(--card-bg); }
+  th, td { padding: 7px 10px; border-bottom: 1px solid #334155; text-align: left; }
+  th { color: var(--muted); font-size: 0.72rem; text-transform: uppercase; }
+  td { font-size: 0.92rem; }
+  th:nth-child(odd), td:nth-child(odd) { width: 18%; text-align: center; }
+  th:nth-child(even), td:nth-child(even) { width: 32%; }
+  td:nth-child(even) { font-family: 'Courier New', monospace; font-weight: 700; letter-spacing: 2px; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .empty { color: transparent; }
+  :root[data-theme='light'] table { border-color: #cbd5e1; }
+  :root[data-theme='light'] th,
+  :root[data-theme='light'] td { border-color: #e2e8f0; }
+  @media (max-width: 420px) {
+    body { padding: 10px; }
+    th, td { padding: 6px; }
+    td:nth-child(even) { letter-spacing: 1px; }
+  }
+</style>
+</head>
+<body>
+<morse-layout page-title="Morse Code Reference" current-page="reference.html">
+  <section class="reference-section">
+    <h2>Letters</h2>
+    <table aria-label="Morse code letters">
+      <thead><tr><th>Char</th><th>Morse</th><th>Char</th><th>Morse</th></tr></thead>
+      <tbody>
+        <tr><td>A</td><td>.-</td><td>N</td><td>-.</td></tr>
+        <tr><td>B</td><td>-...</td><td>O</td><td>---</td></tr>
+        <tr><td>C</td><td>-.-.</td><td>P</td><td>.--.</td></tr>
+        <tr><td>D</td><td>-..</td><td>Q</td><td>--.-</td></tr>
+        <tr><td>E</td><td>.</td><td>R</td><td>.-.</td></tr>
+        <tr><td>F</td><td>..-.</td><td>S</td><td>...</td></tr>
+        <tr><td>G</td><td>--.</td><td>T</td><td>-</td></tr>
+        <tr><td>H</td><td>....</td><td>U</td><td>..-</td></tr>
+        <tr><td>I</td><td>..</td><td>V</td><td>...-</td></tr>
+        <tr><td>J</td><td>.---</td><td>W</td><td>.--</td></tr>
+        <tr><td>K</td><td>-.-</td><td>X</td><td>-..-</td></tr>
+        <tr><td>L</td><td>.-..</td><td>Y</td><td>-.--</td></tr>
+        <tr><td>M</td><td>--</td><td>Z</td><td>--..</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="reference-section">
+    <h2>Digits</h2>
+    <table aria-label="Morse code digits">
+      <thead><tr><th>Char</th><th>Morse</th><th>Char</th><th>Morse</th></tr></thead>
+      <tbody>
+        <tr><td>0</td><td>-----</td><td>5</td><td>.....</td></tr>
+        <tr><td>1</td><td>.----</td><td>6</td><td>-....</td></tr>
+        <tr><td>2</td><td>..---</td><td>7</td><td>--...</td></tr>
+        <tr><td>3</td><td>...--</td><td>8</td><td>---..</td></tr>
+        <tr><td>4</td><td>....-</td><td>9</td><td>----.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="reference-section">
+    <h2>Special Characters</h2>
+    <table aria-label="Morse code special characters">
+      <thead><tr><th>Char</th><th>Morse</th><th>Char</th><th>Morse</th></tr></thead>
+      <tbody>
+        <tr><td>.</td><td>.-.-.-</td><td>,</td><td>--..--</td></tr>
+        <tr><td>?</td><td>..--..</td><td>'</td><td>.----.</td></tr>
+        <tr><td>!</td><td>-.-.--</td><td>/</td><td>-..-.</td></tr>
+        <tr><td>(</td><td>-.--.</td><td>)</td><td>-.--.-</td></tr>
+        <tr><td>&amp;</td><td>.-...</td><td>:</td><td>---...</td></tr>
+        <tr><td>;</td><td>-.-.-.</td><td>=</td><td>-...-</td></tr>
+        <tr><td>+</td><td>.-.-.</td><td>-</td><td>-....-</td></tr>
+        <tr><td>_</td><td>..--.-</td><td>&quot;</td><td>.-..-.</td></tr>
+        <tr><td>$</td><td>...-..-</td><td>@</td><td>.--.-.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</morse-layout>
+
+<script src="layout.js"></script>
+<script>
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(error => console.warn('Service worker registration failed:', error));
+</script>
+</body>
+</html>

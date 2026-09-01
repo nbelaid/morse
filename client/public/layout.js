@@ -56,6 +56,7 @@ class MorseLayout extends HTMLElement {
     const links = [
       ['index.html', 'Trainer'],
       ['translator.html', 'Morse translator'],
+      ['reference.html', 'Morse reference'],
       ['tree.html', 'Morse tree'],
       ['settings.html', 'Sound settings']
     ];
