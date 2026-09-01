@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse Code Tree</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f172a">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root { --primary: #2563eb; --bg: #0f172a; --panel: #1e293b; --text: #f1f5f9; --muted: #94a3b8; --line: #475569; --dot: #38bdf8; --dash: #f59e0b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; padding: 16px; overflow-x: hidden; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .app { width: 100%; max-width: 800px; margin: 0 auto; }
+  h1 { margin: 0 0 10px; padding: 0 48px; text-align: center; font-size: 1.6rem; }
+  .app-header { position: relative; }
+  button { border: 0; border-radius: 8px; cursor: pointer; }
+  .menu-btn { position: absolute; top: 50%; left: 0; width: 44px; height: 44px; padding: 11px; transform: translateY(-50%); background: transparent; color: var(--text); }
+  .menu-btn:hover { background: var(--panel); }
+  .menu-btn:active { transform: translateY(-50%) scale(0.97); }
+  .menu-icon, .menu-icon::before, .menu-icon::after { display: block; width: 22px; height: 2px; border-radius: 2px; background: currentColor; }
+  .menu-icon { position: relative; }
+  .menu-icon::before, .menu-icon::after { position: absolute; left: 0; content: ''; }
+  .menu-icon::before { top: -7px; }
+  .menu-icon::after { top: 7px; }
+  .menu-backdrop { position: fixed; inset: 0; z-index: 20; width: 100%; padding: 0; border-radius: 0; background: rgba(2, 6, 23, 0.68); opacity: 0; pointer-events: none; transition: opacity 0.2s; }
+  .side-menu { position: fixed; inset: 0 auto 0 0; z-index: 21; width: min(82vw, 280px); padding: 24px 16px; background: var(--panel); box-shadow: 8px 0 24px rgba(0,0,0,0.35); transform: translateX(-105%); visibility: hidden; transition: transform 0.22s ease, visibility 0s 0.22s; }
+  .menu-open .menu-backdrop { opacity: 1; pointer-events: auto; }
+  .menu-open .side-menu { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+  .side-menu-title { margin: 0 8px 22px; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
+  .side-menu a { display: block; padding: 12px; border-radius: 8px; color: var(--text); font-weight: 600; text-decoration: none; }
+  .side-menu a:hover { background: #334155; }
+  .side-menu a[aria-current="page"] { background: rgba(37, 99, 235, 0.2); color: #93c5fd; }
+  .legend { display: flex; justify-content: center; gap: 24px; margin-bottom: 12px; color: var(--muted); font-size: 0.86rem; }
+  .legend span { display: flex; align-items: center; gap: 7px; }
+  .legend-mark { width: 20px; height: 3px; border-radius: 3px; }
+  .legend-dot { background: var(--dot); }
+  .legend-dash { background: var(--dash); }
+  .tree-viewport { width: 100%; overflow-x: auto; border: 1px solid #334155; border-radius: 8px; background: var(--panel); scrollbar-color: #64748b var(--bg); }
+  .tree-canvas { display: block; width: 760px; height: 820px; }
+  .tree-edge { stroke: var(--line); stroke-width: 2; }
+  .edge-symbol { font-size: 16px; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: var(--panel); stroke-width: 5px; }
+  .edge-dot { fill: var(--dot); }
+  .edge-dash { fill: var(--dash); }
+  .tree-node circle { fill: var(--bg); stroke: #64748b; stroke-width: 2; }
+  .tree-node.node-root circle { fill: var(--primary); stroke: #60a5fa; }
+  .tree-node.node-number circle { fill: #292524; stroke: var(--dash); }
+  .tree-node.node-special circle { fill: #172554; stroke: var(--dot); }
+  .tree-node.node-junction circle { fill: #334155; stroke: #64748b; }
+  .tree-node.node-deep circle { r: 10px; }
+  .node-character { fill: var(--text); font-size: 17px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+  .node-code { fill: var(--muted); font: 11px 'Courier New', monospace; text-anchor: middle; }
+  .node-root .node-character { font-size: 12px; }
+  .node-junction .node-character { fill: var(--muted); font-size: 12px; }
+  .node-deep .node-character { font-size: 11px; }
+  @media (max-width: 480px) {
+    body { padding: 10px; }
+    .tree-canvas { width: 560px; }
+    .node-code { display: none; }
+  }
+</style>
+</head>
+<body>
+<button class="menu-backdrop" id="menuBackdrop" type="button" aria-label="Close navigation menu" aria-hidden="true" tabindex="-1"></button>
+<nav class="side-menu" id="sideMenu" aria-label="Main navigation" aria-hidden="true">
+  <p class="side-menu-title">Morse tools</p>
+  <a href="index.html">Trainer</a>
+  <a href="translator.html">Text translator</a>
+  <a href="tree.html" aria-current="page">Morse tree</a>
+  <a href="settings.html">Sound settings</a>
+</nav>
+<main class="app">
+  <header class="app-header">
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Open navigation menu" aria-controls="sideMenu" aria-expanded="false">
+      <span class="menu-icon" aria-hidden="true"></span>
+    </button>
+    <h1>Morse Code Tree</h1>
+  </header>
+  <div class="legend" aria-hidden="true">
+    <span><i class="legend-mark legend-dot"></i> . left</span>
+    <span><i class="legend-mark legend-dash"></i> - right</span>
+  </div>
+  <div class="tree-viewport" id="treeViewport" tabindex="0" aria-label="Scrollable Morse code tree">
+    <svg class="tree-canvas" id="morseTree" viewBox="0 0 760 820" role="img" aria-label="Morse code tree with dots branching left and dashes branching right"></svg>
+  </div>
+</main>
+
+<script>
+const MORSE_CHARACTERS = {
+  '.-': 'A', '-...': 'B', '-.-.': 'C', '-..': 'D', '.': 'E', '..-.': 'F', '--.': 'G', '....': 'H', '..': 'I', '.---': 'J', '-.-': 'K', '.-..': 'L', '--': 'M', '-.': 'N', '---': 'O', '.--.': 'P', '--.-': 'Q', '.-.': 'R', '...': 'S', '-': 'T', '..-': 'U', '...-': 'V', '.--': 'W', '-..-': 'X', '-.--': 'Y', '--..': 'Z',
+  '-----': '0', '.----': '1', '..---': '2', '...--': '3', '....-': '4', '.....': '5', '-....': '6', '--...': '7', '---..': '8', '----.': '9',
+  '.-.-.-': '.', '--..--': ',', '..--..': '?', '.----.': "'", '-.-.--': '!', '-..-.': '/', '-.--.': '(', '-.--.-': ')', '.-...': '&', '---...': ':', '-.-.-.': ';', '-...-': '=', '.-.-.': '+', '-....-': '-', '..--.-': '_', '.-..-.': '"', '...-..-': '$', '.--.-.': '@'
+};
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const TREE_WIDTH = 760;
+const ROOT_Y = 45;
+const LEVEL_GAP = 105;
+const SIDE_PADDING = 35;
+const menuBtn = document.getElementById('menuBtn');
+const menuBackdrop = document.getElementById('menuBackdrop');
+const sideMenu = document.getElementById('sideMenu');
+const tree = document.getElementById('morseTree');
+const treeViewport = document.getElementById('treeViewport');
+
+function setMenuOpen(isOpen) {
+  document.body.classList.toggle('menu-open', isOpen);
+  menuBtn.setAttribute('aria-expanded', String(isOpen));
+  menuBtn.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+  menuBackdrop.setAttribute('aria-hidden', String(!isOpen));
+  sideMenu.setAttribute('aria-hidden', String(!isOpen));
+  if (isOpen) sideMenu.querySelector('a').focus();
+  else menuBtn.focus();
+}
+
+function createSvgElement(name, attributes = {}) {
+  const element = document.createElementNS(SVG_NS, name);
+  Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+  return element;
+}
+
+function buildTreeLayout() {
+  const codes = new Set(['']);
+  Object.keys(MORSE_CHARACTERS).forEach(code => {
+    for (let length = 1; length <= code.length; length++) codes.add(code.slice(0, length));
+  });
+
+  const positions = new Map();
+  let nextLeaf = 0;
+  function positionBranch(code) {
+    const children = ['.', '-'].map(symbol => code + symbol).filter(child => codes.has(child));
+    if (!children.length) {
+      positions.set(code, { x: nextLeaf++, y: ROOT_Y + code.length * LEVEL_GAP });
+      return;
+    }
+    children.forEach(positionBranch);
+    const x = children.reduce((sum, child) => sum + positions.get(child).x, 0) / children.length;
+    positions.set(code, { x, y: ROOT_Y + code.length * LEVEL_GAP });
+  }
+  positionBranch('');
+
+  const xValues = [...positions.values()].map(position => position.x);
+  const minX = Math.min(...xValues);
+  const maxX = Math.max(...xValues);
+  const scale = (TREE_WIDTH - SIDE_PADDING * 2) / (maxX - minX || 1);
+  positions.forEach(position => { position.x = SIDE_PADDING + (position.x - minX) * scale; });
+  return positions;
+}
+
+function centerTreeOnRoot(rootX) {
+  setTimeout(() => {
+    const displayedRootX = rootX * treeViewport.scrollWidth / TREE_WIDTH;
+    treeViewport.scrollLeft = displayedRootX - treeViewport.clientWidth / 2;
+  }, 0);
+}
+
+function drawTree() {
+  const positions = buildTreeLayout();
+  const entries = [...positions.keys()].sort((first, second) => first.length - second.length || first.localeCompare(second));
+  const edgeLayer = createSvgElement('g');
+  const nodeLayer = createSvgElement('g');
+
+  entries.slice(1).forEach(code => {
+    const parent = positions.get(code.slice(0, -1));
+    const child = positions.get(code);
+    const symbol = code.at(-1);
+    edgeLayer.appendChild(createSvgElement('line', { x1: parent.x, y1: parent.y + 24, x2: child.x, y2: child.y - 24, class: 'tree-edge' }));
+    const label = createSvgElement('text', { x: (parent.x + child.x) / 2, y: (parent.y + child.y) / 2 - 4, class: `edge-symbol ${symbol === '.' ? 'edge-dot' : 'edge-dash'}` });
+    label.textContent = symbol;
+    edgeLayer.appendChild(label);
+  });
+
+  entries.forEach(code => {
+    const character = code ? MORSE_CHARACTERS[code] : 'START';
+    const { x, y } = positions.get(code);
+    const nodeType = !code ? 'node-root' : !character ? 'node-junction' : /\d/.test(character) ? 'node-number' : /[A-Z]/.test(character) ? '' : 'node-special';
+    const depthClass = code.length >= 5 ? 'node-deep' : '';
+    const group = createSvgElement('g', { class: `tree-node ${nodeType} ${depthClass}`.trim(), transform: `translate(${x} ${y})` });
+    group.appendChild(createSvgElement('circle', { r: code.length >= 5 ? 10 : code ? 21 : 27 }));
+    const characterLabel = createSvgElement('text', { y: code ? -3 : 1, class: 'node-character' });
+    characterLabel.textContent = character || code.at(-1);
+    group.appendChild(characterLabel);
+    if (character) {
+      const codeLabel = createSvgElement('text', { y: 35, class: 'node-code' });
+      codeLabel.textContent = code;
+      group.appendChild(codeLabel);
+    }
+    nodeLayer.appendChild(group);
+  });
+
+  tree.append(edgeLayer, nodeLayer);
+  const rootX = positions.get('').x;
+  centerTreeOnRoot(rootX);
+  window.addEventListener('resize', () => centerTreeOnRoot(rootX));
+  new ResizeObserver(() => centerTreeOnRoot(rootX)).observe(treeViewport);
+}
+
+menuBtn.addEventListener('click', () => setMenuOpen(!document.body.classList.contains('menu-open')));
+menuBackdrop.addEventListener('click', () => setMenuOpen(false));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.body.classList.contains('menu-open')) setMenuOpen(false);
+});
+drawTree();
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(error => console.warn('Service worker registration failed:', error));
+</script>
+</body>
+</html>

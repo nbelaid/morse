@@ -1,8 +1,10 @@
-const CACHE_NAME = 'morse-trainer-v1';
+const CACHE_NAME = 'morse-trainer-v12';
 const FILES_TO_CACHE = [
   './',
   './index.html',
   './translator.html',
+  './settings.html',
+  './tree.html',
   './manifest.json',
   './icon-192.png',
   './icon-512.png'

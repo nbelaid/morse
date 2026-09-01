@@ -40,15 +40,71 @@
     font-size: 1.6rem;
     margin-bottom: 20px;
   }
-  .page-link {
+  .app-header { position: relative; }
+  .app-header h1 { padding: 0 48px; }
+  .menu-btn {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 44px;
+    height: 44px;
+    padding: 11px;
+    transform: translateY(-50%);
+    background: transparent;
+    color: var(--text);
+  }
+  .menu-btn:hover { background: #1e293b; }
+  .menu-btn:active { transform: translateY(-50%) scale(0.97); }
+  .menu-icon, .menu-icon::before, .menu-icon::after {
     display: block;
-    color: var(--primary);
-    text-align: center;
-    margin: -12px 0 20px;
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .menu-icon { position: relative; }
+  .menu-icon::before, .menu-icon::after { position: absolute; left: 0; content: '' }
+  .menu-icon::before { top: -7px; }
+  .menu-icon::after { top: 7px; }
+  .menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    border: 0;
+    border-radius: 0;
+    background: rgba(2, 6, 23, 0.68);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .side-menu {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 21;
+    width: min(82vw, 280px);
+    padding: 24px 16px;
+    background: var(--card-bg);
+    box-shadow: 8px 0 24px rgba(0,0,0,0.35);
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform 0.22s ease, visibility 0s 0.22s;
+  }
+  .menu-open .menu-backdrop { opacity: 1; pointer-events: auto; }
+  .menu-open .side-menu { transform: translateX(0); visibility: visible; transition-delay: 0s; }
+  .side-menu-title { margin: 0 8px 22px; color: var(--muted); font-size: 0.78rem; text-transform: uppercase; }
+  .side-menu a {
+    display: block;
+    padding: 12px;
+    border-radius: 8px;
+    color: var(--text);
     font-weight: 600;
     text-decoration: none;
   }
-  .page-link:hover { color: #60a5fa; }
+  .side-menu a:hover { background: #334155; }
+  .side-menu a[aria-current="page"] {
+    background: rgba(37, 99, 235, 0.2);
+    color: #93c5fd;
+  }
   .card {
     background: var(--card-bg);
     border-radius: 16px;
@@ -145,26 +201,6 @@
   .section-body {
     margin-top: 16px;
   }
-  .settings-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px 16px;
-  }
-  .settings-field label {
-    font-size: 0.8rem;
-    margin-bottom: 4px;
-  }
-  .settings-field input[type="number"] {
-    width: 100%;
-  }
-  .reset-btn {
-    margin-top: 12px;
-    background: #334155;
-    color: var(--text);
-    font-size: 0.85rem;
-    padding: 10px;
-  }
-  .reset-btn:hover { background: #475569; }
   .charpool-textarea {
     width: 100%;
     min-height: 60px;
@@ -318,14 +354,25 @@
   .hidden { display: none; }
   @media (max-width: 380px) {
     .morse-display { font-size: 1.3rem; letter-spacing: 2px; }
-    .settings-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
 <body>
+<button class="menu-backdrop" id="menuBackdrop" type="button" aria-label="Close navigation menu" aria-hidden="true" tabindex="-1"></button>
+<nav class="side-menu" id="sideMenu" aria-label="Main navigation" aria-hidden="true">
+  <p class="side-menu-title">Morse tools</p>
+  <a href="index.html" aria-current="page">Trainer</a>
+  <a href="translator.html">Text translator</a>
+  <a href="tree.html">Morse tree</a>
+  <a href="settings.html">Sound settings</a>
+</nav>
 <div class="app">
-  <h1>📡 Morse Code Trainer</h1>
-  <a class="page-link" href="translator.html">Open text translator</a>
+  <header class="app-header">
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Open navigation menu" aria-controls="sideMenu" aria-expanded="false">
+      <span class="menu-icon" aria-hidden="true"></span>
+    </button>
+    <h1>📡 Morse Code Trainer</h1>
+  </header>
 
   <div class="card">
     <button class="section-title-btn" id="challengeSettingsToggle">
@@ -385,45 +432,6 @@
         <div class="charpool-note">Add or remove any characters you want. Duplicates are ignored automatically.</div>
         <div class="charpool-warning" id="charPoolWarning"></div>
       </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <button class="section-title-btn" id="soundSettingsToggle">
-      <span>⚙️ Sound settings</span>
-      <span class="section-arrow" id="soundSettingsArrow">▾</span>
-    </button>
-    <div class="section-body hidden" id="soundSettingsBody">
-      <div class="toggle-row">
-        <label><input type="checkbox" id="autoPlayToggle" checked> Auto-play sound on new challenge</label>
-      </div>
-      <div class="settings-grid">
-        <div class="settings-field">
-          <label for="freqInput">Frequency (Hz)</label>
-          <input type="number" id="freqInput" min="100" max="2000" step="10" value="650">
-        </div>
-        <div class="settings-field">
-          <label for="dotInput">Dot duration (ms)</label>
-          <input type="number" id="dotInput" min="20" max="1000" step="10" value="90">
-        </div>
-        <div class="settings-field">
-          <label for="dashInput">Dash duration (ms)</label>
-          <input type="number" id="dashInput" min="20" max="3000" step="10" value="270">
-        </div>
-        <div class="settings-field">
-          <label for="symbolGapInput">Gap between symbols (ms)</label>
-          <input type="number" id="symbolGapInput" min="0" max="1000" step="10" value="90">
-        </div>
-        <div class="settings-field">
-          <label for="charGapInput">Gap between characters (ms)</label>
-          <input type="number" id="charGapInput" min="0" max="3000" step="10" value="270">
-        </div>
-        <div class="settings-field">
-          <label for="wordGapInput">Gap between words (ms)</label>
-          <input type="number" id="wordGapInput" min="0" max="5000" step="10" value="630">
-        </div>
-      </div>
-      <button class="reset-btn" id="resetSettingsBtn">Reset to standard timing</button>
     </div>
   </div>
 
@@ -530,15 +538,6 @@ const NGRAM_WORDLISTS = {
   ]
 };
 
-const DEFAULT_SETTINGS = {
-  freq: 650,
-  dot: 90,
-  dash: 270,
-  symbolGap: 90,
-  charGap: 270,
-  wordGap: 630
-};
-
 const EYE_OPEN_PATH = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
 const EYE_OFF_PATH = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-6.06"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
 
@@ -563,7 +562,6 @@ const resultStatus = document.getElementById('resultStatus');
 const resultCompare = document.getElementById('resultCompare');
 const charPoolInput = document.getElementById('charPoolInput');
 const charPoolWarning = document.getElementById('charPoolWarning');
-const autoPlayToggle = document.getElementById('autoPlayToggle');
 const charsetSection = document.getElementById('charsetSection');
 const languageRow = document.getElementById('languageRow');
 const ngramHint = document.getElementById('ngramHint');
@@ -572,48 +570,74 @@ const challengeSettingsToggle = document.getElementById('challengeSettingsToggle
 const challengeSettingsBody = document.getElementById('challengeSettingsBody');
 const challengeSettingsArrow = document.getElementById('challengeSettingsArrow');
 
-const soundSettingsToggle = document.getElementById('soundSettingsToggle');
-const soundSettingsBody = document.getElementById('soundSettingsBody');
-const soundSettingsArrow = document.getElementById('soundSettingsArrow');
-const freqInput = document.getElementById('freqInput');
-const dotInput = document.getElementById('dotInput');
-const dashInput = document.getElementById('dashInput');
-const symbolGapInput = document.getElementById('symbolGapInput');
-const charGapInput = document.getElementById('charGapInput');
-const wordGapInput = document.getElementById('wordGapInput');
-const resetSettingsBtn = document.getElementById('resetSettingsBtn');
+const menuBtn = document.getElementById('menuBtn');
+const menuBackdrop = document.getElementById('menuBackdrop');
+const sideMenu = document.getElementById('sideMenu');
+
+function setMenuOpen(isOpen) {
+  document.body.classList.toggle('menu-open', isOpen);
+  menuBtn.setAttribute('aria-expanded', String(isOpen));
+  menuBtn.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
+  menuBackdrop.setAttribute('aria-hidden', String(!isOpen));
+  sideMenu.setAttribute('aria-hidden', String(!isOpen));
+  if (isOpen) sideMenu.querySelector('a').focus();
+  else menuBtn.focus();
+}
+
+menuBtn.addEventListener('click', () => setMenuOpen(!document.body.classList.contains('menu-open')));
+menuBackdrop.addEventListener('click', () => setMenuOpen(false));
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && document.body.classList.contains('menu-open')) setMenuOpen(false);
+});
 
 const SOUND_SETTINGS_KEY = 'morse-trainer-sound-settings';
-const soundSettingInputs = [freqInput, dotInput, dashInput, symbolGapInput, charGapInput, wordGapInput];
+const TRAINER_SETTINGS_KEY = 'morse-trainer-settings';
 
-function loadSoundSettings() {
-  try {
-    const savedSettings = JSON.parse(localStorage.getItem(SOUND_SETTINGS_KEY));
-    if (!savedSettings) return;
-    soundSettingInputs.forEach(input => {
-      if (savedSettings[input.id] !== undefined) input.value = savedSettings[input.id];
-    });
-    if (typeof savedSettings.autoPlay === 'boolean') autoPlayToggle.checked = savedSettings.autoPlay;
-  } catch (error) {
-    console.warn('Could not load sound settings:', error);
-  }
+function selectRadio(name, value) {
+  const input = document.querySelector(`input[name="${name}"][value="${value}"]`);
+  if (input) input.checked = true;
 }
 
-function saveSoundSettings() {
-  const savedSettings = { autoPlay: autoPlayToggle.checked };
-  soundSettingInputs.forEach(input => {
-    savedSettings[input.id] = input.value;
-  });
+function loadTrainerSettings() {
+  let savedSettings = null;
   try {
-    localStorage.setItem(SOUND_SETTINGS_KEY, JSON.stringify(savedSettings));
+    savedSettings = JSON.parse(localStorage.getItem(TRAINER_SETTINGS_KEY));
   } catch (error) {
-    console.warn('Could not save sound settings:', error);
+    console.warn('Could not load trainer settings:', error);
   }
+
+  if (savedSettings) {
+    if (savedSettings.numChars !== undefined) numCharsInput.value = savedSettings.numChars;
+    if (savedSettings.numWords !== undefined) numWordsInput.value = savedSettings.numWords;
+    if (typeof savedSettings.showMorseDefault === 'boolean') showMorseDefaultToggle.checked = savedSettings.showMorseDefault;
+    selectRadio('successionMode', savedSettings.successionMode);
+    selectRadio('ngramLanguage', savedSettings.ngramLanguage);
+    selectRadio('charset', savedSettings.charset);
+  }
+
+  charPoolInput.value = savedSettings && typeof savedSettings.charPool === 'string'
+    ? savedSettings.charPool
+    : PRESETS[document.querySelector('input[name="charset"]:checked').value].join(' ');
+  validateCharPool();
+  updateSuccessionModeUI();
 }
 
-loadSoundSettings();
-soundSettingInputs.forEach(input => input.addEventListener('input', saveSoundSettings));
-autoPlayToggle.addEventListener('change', saveSoundSettings);
+function saveTrainerSettings() {
+  const savedSettings = {
+    numChars: numCharsInput.value,
+    numWords: numWordsInput.value,
+    showMorseDefault: showMorseDefaultToggle.checked,
+    successionMode: document.querySelector('input[name="successionMode"]:checked').value,
+    ngramLanguage: document.querySelector('input[name="ngramLanguage"]:checked').value,
+    charset: document.querySelector('input[name="charset"]:checked').value,
+    charPool: charPoolInput.value
+  };
+  try {
+    localStorage.setItem(TRAINER_SETTINGS_KEY, JSON.stringify(savedSettings));
+  } catch (error) {
+    console.warn('Could not save trainer settings:', error);
+  }
+}
 
 function applyPresetToTextarea() {
   const mode = document.querySelector('input[name="charset"]:checked').value;
@@ -622,7 +646,10 @@ function applyPresetToTextarea() {
 }
 
 document.querySelectorAll('input[name="charset"]').forEach(el => {
-  el.addEventListener('change', applyPresetToTextarea);
+  el.addEventListener('change', () => {
+    applyPresetToTextarea();
+    saveTrainerSettings();
+  });
 });
 
 function parseCharPool(rawValue) {
@@ -656,7 +683,10 @@ function validateCharPool() {
   return pool;
 }
 
-charPoolInput.addEventListener('input', validateCharPool);
+charPoolInput.addEventListener('input', () => {
+  validateCharPool();
+  saveTrainerSettings();
+});
 
 function updateSuccessionModeUI() {
   const mode = document.querySelector('input[name="successionMode"]:checked').value;
@@ -672,9 +702,15 @@ function updateSuccessionModeUI() {
 }
 
 document.querySelectorAll('input[name="successionMode"]').forEach(el => {
-  el.addEventListener('change', updateSuccessionModeUI);
+  el.addEventListener('change', () => {
+    updateSuccessionModeUI();
+    saveTrainerSettings();
+  });
 });
-updateSuccessionModeUI();
+document.querySelectorAll('input[name="ngramLanguage"]').forEach(el => el.addEventListener('change', saveTrainerSettings));
+numCharsInput.addEventListener('input', saveTrainerSettings);
+numWordsInput.addEventListener('input', saveTrainerSettings);
+showMorseDefaultToggle.addEventListener('change', saveTrainerSettings);
 
 function updateMorseVisibility() {
   if (morseHidden) {
@@ -719,31 +755,25 @@ challengeSettingsToggle.addEventListener('click', () => {
   challengeSettingsArrow.textContent = isHidden ? '▴' : '▾';
 });
 
-soundSettingsToggle.addEventListener('click', () => {
-  const isHidden = soundSettingsBody.classList.contains('hidden');
-  soundSettingsBody.classList.toggle('hidden');
-  soundSettingsArrow.textContent = isHidden ? '▴' : '▾';
-});
-
-resetSettingsBtn.addEventListener('click', () => {
-  freqInput.value = DEFAULT_SETTINGS.freq;
-  dotInput.value = DEFAULT_SETTINGS.dot;
-  dashInput.value = DEFAULT_SETTINGS.dash;
-  symbolGapInput.value = DEFAULT_SETTINGS.symbolGap;
-  charGapInput.value = DEFAULT_SETTINGS.charGap;
-  wordGapInput.value = DEFAULT_SETTINGS.wordGap;
-  saveSoundSettings();
-});
-
 function getSoundSettings() {
-  const clampMin = (val, min) => (isNaN(val) || val < min ? min : val);
+  let savedSettings = {};
+  try {
+    savedSettings = JSON.parse(localStorage.getItem(SOUND_SETTINGS_KEY)) || {};
+  } catch (error) {
+    console.warn('Could not load sound settings:', error);
+  }
+  const clamp = (value, fallback, min, max) => {
+    const parsedValue = Number.parseFloat(value);
+    return Math.min(Math.max(Number.isFinite(parsedValue) ? parsedValue : fallback, min), max);
+  };
   return {
-    freq: clampMin(parseFloat(freqInput.value), 50),
-    dot: clampMin(parseFloat(dotInput.value), 10) / 1000,
-    dash: clampMin(parseFloat(dashInput.value), 10) / 1000,
-    symbolGap: clampMin(parseFloat(symbolGapInput.value), 0) / 1000,
-    charGap: clampMin(parseFloat(charGapInput.value), 0) / 1000,
-    wordGap: clampMin(parseFloat(wordGapInput.value), 0) / 1000
+    autoPlay: savedSettings.autoPlay !== false,
+    freq: clamp(savedSettings.freqInput, 650, 100, 2000),
+    dot: clamp(savedSettings.dotInput, 90, 20, 1000) / 1000,
+    dash: clamp(savedSettings.dashInput, 270, 20, 3000) / 1000,
+    symbolGap: clamp(savedSettings.symbolGapInput, 90, 0, 1000) / 1000,
+    charGap: clamp(savedSettings.charGapInput, 270, 0, 3000) / 1000,
+    wordGap: clamp(savedSettings.wordGapInput, 630, 0, 5000) / 1000
   };
 }
 
@@ -797,7 +827,7 @@ function generateChallenge() {
   morseHidden = !showMorseDefaultToggle.checked;
   updateMorseVisibility();
 
-  if (autoPlayToggle.checked) {
+  if (getSoundSettings().autoPlay) {
     playMorse(currentAnswer);
   }
 }
@@ -895,8 +925,7 @@ answerInput.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') checkBtn.click();
 });
 
-// Initialize the character pool textarea with the default preset (Letters)
-applyPresetToTextarea();
+loadTrainerSettings();
 
 // Register service worker for offline support
 if ('serviceWorker' in navigator) {
