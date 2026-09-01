@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Morse Text Translator</title>
+<title>Morse Translator</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="layout.css">
 <meta name="theme-color" content="#0f172a">
@@ -22,23 +22,39 @@
   .warning { min-height: 1.25em; margin-top: 8px; color: var(--warning); font-size: 0.82rem; }
   button { width: 100%; border: 0; border-radius: 8px; padding: 13px 16px; color: white; background: var(--primary); cursor: pointer; font-size: 1rem; font-weight: 600; }
   button:hover { background: var(--primary-dark); }
-  @media (max-width: 420px) { .morse-output { font-size: 1rem; letter-spacing: 1px; } }
+  button:disabled { cursor: not-allowed; opacity: 0.55; }
+  .direction-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 18px; padding: 4px; border: 1px solid #334155; border-radius: 8px; background: var(--bg); }
+  .direction-btn { padding: 10px; background: transparent; color: var(--muted); }
+  .direction-btn:hover { background: rgba(148, 163, 184, 0.15); }
+  .direction-btn[aria-pressed="true"] { background: var(--primary); color: white; }
+  .plain-text-output { font-family: inherit; letter-spacing: 0; }
+  .output-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .copy-btn { background: #334155; color: var(--text); }
+  .copy-btn:hover { background: #475569; }
+  @media (max-width: 420px) { .morse-output { font-size: 1rem; letter-spacing: 1px; } .plain-text-output { letter-spacing: 0; } }
 </style>
 </head>
 <body>
-<morse-layout page-title="Morse Text Translator" current-page="translator.html">
+<morse-layout page-title="Morse Translator" current-page="translator.html">
 
   <section class="card">
-    <label for="textInput">Text to translate</label>
+    <div class="direction-switch" role="group" aria-label="Translation direction">
+      <button class="direction-btn" id="textToMorseBtn" type="button" aria-pressed="true">Text → Morse</button>
+      <button class="direction-btn" id="morseToTextBtn" type="button" aria-pressed="false">Morse → Text</button>
+    </div>
+    <label id="inputLabel" for="textInput">Text to translate</label>
     <textarea id="textInput" placeholder="Write your message here..." autofocus></textarea>
     <div class="warning" id="unsupportedCharacters" aria-live="polite"></div>
     <button id="translateBtn" type="button">Translate to Morse</button>
   </section>
 
   <section class="card">
-    <label for="morseOutput">Morse code</label>
-    <div class="morse-output" id="morseOutput" aria-live="polite">Your translation will appear here.</div>
-    <button id="playBtn" type="button" disabled>Play sound</button>
+    <label id="outputLabel">Morse code</label>
+    <div class="morse-output" id="morseOutput" aria-labelledby="outputLabel" aria-live="polite">Your translation will appear here.</div>
+    <div class="output-actions">
+      <button class="copy-btn secondary" id="copyBtn" type="button" aria-live="polite" disabled>Copy</button>
+      <button id="playBtn" type="button" disabled>Play sound</button>
+    </div>
   </section>
 
 </morse-layout>
@@ -49,13 +65,22 @@ const MORSE = {
   'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..',
   '0': '-----', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.', '.': '.-.-.-', ',': '--..--', '?': '..--..', "'": '.----.', '!': '-.-.--', '/': '-..-.', '(': '-.--.', ')': '-.--.-', '&': '.-...', ':': '---...', ';': '-.-.-.', '=': '-...-', '+': '.-.-.', '-': '-....-', '_': '..--.-', '"': '.-..-.', '$': '...-..-', '@': '.--.-.'
 };
+const REVERSE_MORSE = Object.fromEntries(Object.entries(MORSE).map(([character, code]) => [code, character]));
 const SOUND_SETTINGS_KEY = 'morse-trainer-sound-settings';
 const textInput = document.getElementById('textInput');
+const inputLabel = document.getElementById('inputLabel');
+const outputLabel = document.getElementById('outputLabel');
 const morseOutput = document.getElementById('morseOutput');
 const unsupportedCharacters = document.getElementById('unsupportedCharacters');
+const translateBtn = document.getElementById('translateBtn');
+const textToMorseBtn = document.getElementById('textToMorseBtn');
+const morseToTextBtn = document.getElementById('morseToTextBtn');
+const copyBtn = document.getElementById('copyBtn');
 const playBtn = document.getElementById('playBtn');
+let translationDirection = 'text-to-morse';
 let translatedText = '';
 let audioCtx = null;
+let copyFeedbackTimer = null;
 
 function getSoundSettings() {
   let savedSettings = {};
@@ -68,18 +93,79 @@ function getSoundSettings() {
   };
   return { autoPlay: savedSettings.autoPlay !== false, freq: clamp(savedSettings.freqInput, 600, 100, 2000), dot: clamp(savedSettings.dotInput, 100, 20, 1000) / 1000, dash: clamp(savedSettings.dashInput, 300, 20, 3000) / 1000, symbolGap: clamp(savedSettings.symbolGapInput, 100, 0, 1000) / 1000, charGap: clamp(savedSettings.charGapInput, 300, 0, 3000) / 1000, wordGap: clamp(savedSettings.wordGapInput, 700, 0, 5000) / 1000 };
 }
-function translateText() {
+function finishTranslation(words, unsupported, warningLabel) {
+  translatedText = words.join(' ');
+  unsupportedCharacters.textContent = unsupported.length ? `${warningLabel}: ${unsupported.join(' ')}` : '';
+  copyBtn.disabled = !words.length;
+  playBtn.disabled = !words.length;
+  if (words.length && getSoundSettings().autoPlay) playMorse(translatedText);
+}
+
+function translateToMorse() {
   const input = textInput.value.toUpperCase();
   const unsupported = [...new Set([...input].filter(character => !MORSE[character] && !/\s/.test(character)))];
   const words = input.replace(/\s+/g, ' ').trim().split(' ')
     .map(word => [...word].filter(character => MORSE[character]).join(''))
     .filter(Boolean);
-  translatedText = words.join(' ');
   morseOutput.textContent = words.length ? words.map(word => [...word].map(character => MORSE[character]).join('   ')).join(' / ') : 'Your translation will appear here.';
-  unsupportedCharacters.textContent = unsupported.length ? `Unsupported characters ignored: ${unsupported.join(' ')}` : '';
-  playBtn.disabled = !words.length;
-  if (words.length && getSoundSettings().autoPlay) playMorse(translatedText);
+  finishTranslation(words, unsupported, 'Unsupported characters ignored');
 }
+
+function translateToText() {
+  const normalizedInput = textInput.value.replace(/[·•]/g, '.').replace(/[‐‑‒–—−]/g, '-').trim();
+  const encodedWords = normalizedInput ? normalizedInput.split(/\s*\/\s*/) : [];
+  const sequences = encodedWords.flatMap(word => word.split(/\s+/).filter(Boolean));
+  const unsupported = [...new Set(sequences.filter(sequence => !REVERSE_MORSE[sequence]))];
+  const words = encodedWords
+    .map(word => word.split(/\s+/).filter(sequence => REVERSE_MORSE[sequence]).map(sequence => REVERSE_MORSE[sequence]).join(''))
+    .filter(Boolean);
+  morseOutput.textContent = words.length ? words.join(' ') : 'Your translation will appear here.';
+  finishTranslation(words, unsupported, 'Unsupported Morse sequences ignored');
+}
+
+function setTranslationDirection(direction) {
+  translationDirection = direction;
+  const isMorseInput = direction === 'morse-to-text';
+  textToMorseBtn.setAttribute('aria-pressed', String(!isMorseInput));
+  morseToTextBtn.setAttribute('aria-pressed', String(isMorseInput));
+  inputLabel.textContent = isMorseInput ? 'Morse code to translate' : 'Text to translate';
+  outputLabel.textContent = isMorseInput ? 'Plain text' : 'Morse code';
+  textInput.placeholder = isMorseInput ? 'Enter letters separated by spaces and words by /' : 'Write your message here...';
+  translateBtn.textContent = isMorseInput ? 'Translate to Text' : 'Translate to Morse';
+  morseOutput.classList.toggle('plain-text-output', isMorseInput);
+  textInput.value = '';
+  morseOutput.textContent = 'Your translation will appear here.';
+  unsupportedCharacters.textContent = '';
+  translatedText = '';
+  copyBtn.disabled = true;
+  copyBtn.textContent = 'Copy';
+  playBtn.disabled = true;
+  textInput.focus();
+}
+
+async function copyTranslation() {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(morseOutput.textContent);
+    } else {
+      const copyArea = document.createElement('textarea');
+      copyArea.value = morseOutput.textContent;
+      copyArea.style.position = 'fixed';
+      copyArea.style.opacity = '0';
+      document.body.appendChild(copyArea);
+      copyArea.select();
+      document.execCommand('copy');
+      copyArea.remove();
+    }
+    copyBtn.textContent = 'Copied';
+  } catch (error) {
+    copyBtn.textContent = 'Copy failed';
+    console.warn('Could not copy translation:', error);
+  }
+  clearTimeout(copyFeedbackTimer);
+  copyFeedbackTimer = setTimeout(() => { copyBtn.textContent = 'Copy'; }, 1500);
+}
+
 function playTone(startTime, duration, frequency) {
   const oscillator = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -111,7 +197,10 @@ function playMorse(text) {
   });
 }
 
-document.getElementById('translateBtn').addEventListener('click', translateText);
+translateBtn.addEventListener('click', () => translationDirection === 'text-to-morse' ? translateToMorse() : translateToText());
+textToMorseBtn.addEventListener('click', () => setTranslationDirection('text-to-morse'));
+morseToTextBtn.addEventListener('click', () => setTranslationDirection('morse-to-text'));
+copyBtn.addEventListener('click', copyTranslation);
 playBtn.addEventListener('click', () => playMorse(translatedText));
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(error => console.warn('Service worker registration failed:', error));
 </script>
