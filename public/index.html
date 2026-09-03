@@ -358,7 +358,10 @@
   </div>
 
   <div class="card">
-    <button class="btn-primary" id="newChallengeBtn">🎲 New Challenge</button>
+    <div class="btn-row">
+      <button class="btn-primary" id="newChallengeBtn">🎲 New Challenge</button>
+      <button class="btn-secondary" id="previousChallengeBtn" disabled>↩ Previous Challenge</button>
+    </div>
   </div>
 
   <div class="card" id="challengeCard" style="display:none;">
@@ -465,12 +468,15 @@ const EYE_OPEN_PATH = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></
 const EYE_OFF_PATH = '<path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.8 21.8 0 0 1 5.06-6.06"></path><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.8 21.8 0 0 1-2.16 3.19"></path><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
 
 let currentAnswer = ''; // words separated by single spaces
+const challengeHistory = [];
+let currentChallengeIndex = -1;
 let audioCtx = null;
 let morseHidden = true;
 
 const numCharsInput = document.getElementById('numChars');
 const numWordsInput = document.getElementById('numWords');
 const newChallengeBtn = document.getElementById('newChallengeBtn');
+const previousChallengeBtn = document.getElementById('previousChallengeBtn');
 const challengeCard = document.getElementById('challengeCard');
 const morseDisplay = document.getElementById('morseDisplay');
 const morseHint = document.getElementById('morseHint');
@@ -718,7 +724,19 @@ function generateChallenge() {
   const morseDisplayParts = words.map(word =>
     word.split('').map(c => MORSE[c]).join('   ')
   );
-  morseDisplay.textContent = morseDisplayParts.join('   /   ');
+  const morse = morseDisplayParts.join('   /   ');
+
+  challengeHistory.splice(currentChallengeIndex + 1);
+  challengeHistory.push({ answer: currentAnswer, morse, numWords, wordLen });
+  currentChallengeIndex++;
+  previousChallengeBtn.disabled = currentChallengeIndex === 0;
+
+  showChallenge(currentAnswer, morse, numWords, wordLen);
+}
+
+function showChallenge(answer, morse, numWords, wordLen) {
+  currentAnswer = answer;
+  morseDisplay.textContent = morse;
 
   challengeCard.style.display = 'block';
   resultArea.classList.add('hidden');
@@ -787,6 +805,19 @@ function playMorse(answer) {
 }
 
 newChallengeBtn.addEventListener('click', generateChallenge);
+
+previousChallengeBtn.addEventListener('click', () => {
+  if (currentChallengeIndex <= 0) return;
+  currentChallengeIndex--;
+  const previousChallenge = challengeHistory[currentChallengeIndex];
+  previousChallengeBtn.disabled = currentChallengeIndex === 0;
+  showChallenge(
+    previousChallenge.answer,
+    previousChallenge.morse,
+    previousChallenge.numWords,
+    previousChallenge.wordLen
+  );
+});
 
 playBtn.addEventListener('click', () => {
   if (currentAnswer) playMorse(currentAnswer);
